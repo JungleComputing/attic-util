@@ -1,4 +1,4 @@
-<project name="colobus" default="build" basedir=".">
+<project name="inisUtil" default="build" basedir=".">
 	<description>
       Build file for ibisUtil
     </description>
@@ -8,6 +8,8 @@
 	<property name="lib" location="lib" />
 	<property name="doc" location="doc" />
 	<property name="external" location="external" />
+	<property name="jar" location="${lib}/ibis-util.jar" />
+
 	<property name="java.debug.value" value="true" />
 
 	<path id="external_jars">
@@ -36,8 +38,8 @@
 		<!-- Create the distribution directory -->
 		<mkdir dir="${lib}" />
 
-		<!-- Put everything in ${tmp} into the colobus.jar file -->
-		<jar jarfile="${lib}/ibis-util.jar" basedir="${tmp}" />
+		<!-- Put everything in ${tmp} into the jar file -->
+		<jar jarfile="${jar}" basedir="${tmp}" />
 
 		<!-- And delete the build dir -->
 		<delete dir="${tmp}" />
@@ -55,7 +57,7 @@
 	</target>
 	
 	<target name="clean" description="clean up">
-		<delete file="${lib}/ibis-util.jar" />
+		<delete file="${jar}" />
 	</target>
 
 	<target name="distclean" depends="clean" description="clean up, including docs">
