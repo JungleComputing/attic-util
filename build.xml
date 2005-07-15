@@ -1,0 +1,55 @@
+<project name="colobus" default="build" basedir=".">
+	<description>
+      Build file for ibisUtil
+    </description>
+	<!-- Global properties for ibisUtil -->
+	<property name="src" location="src" />
+	<property name="tmp" location="tmp" />
+	<property name="lib" location="lib" />
+	<property name="doc" location="doc" />
+	<property name="java.debug.value" value="true" />
+
+	<target name="init">
+		<!-- Create the time stamp -->
+		<tstamp />
+
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${tmp}" />
+		<mkdir dir="${doc}/javadoc" />
+	</target>
+
+	<target name="compile" depends="init" description="compile the source ">
+		<!-- Compile the java code from ${src} into ${tmp} -->
+		<javac srcdir="${src}" destdir="${tmp}" debug="on" />
+	</target>
+
+	<target name="build" depends="compile" description="build the JAR file">
+		<!-- Create the distribution directory -->
+		<mkdir dir="${lib}" />
+
+		<!-- Put everything in ${tmp} into the colobus.jar file -->
+		<jar jarfile="${lib}/ibis-util.jar" basedir="${tmp}" />
+
+		<!-- And delete the build dir -->
+		<delete dir="${tmp}" />
+	</target>
+
+	<target name="dist" depends="build,javadoc" description="build the JAR file and documentation" />
+
+	<target name="javadoc" depends="compile" description="generate all javadocs">
+		<javadoc destdir="${doc}/javadoc" access="public" packagenames="ibis.util.*" sourcepath="${src}" overview="src/ibis/util/package.html">
+			<link href="http://java.sun.com/j2se/1.4.2/docs/api/" />
+		</javadoc>
+
+		<!-- And delete the build dir -->
+		<delete dir="${tmp}" />
+	</target>
+	
+	<target name="clean" description="clean up">
+		<delete file="${lib}/ibis-util.jar" />
+	</target>
+
+	<target name="distclean" depends="clean" description="clean up, including docs">
+		<delete dir="${doc}/javadoc" />
+	</target>
+</project>
