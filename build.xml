@@ -1,4 +1,4 @@
-<project name="inisUtil" default="build" basedir=".">
+<project name="ibisUtil" default="build" basedir=".">
 	<description>
       Build file for ibisUtil
     </description>
