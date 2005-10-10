@@ -244,7 +244,7 @@ public class Timer implements java.io.Serializable {
         nf.setGroupingUsed(false);
 
         // special case for 0
-        if (micros == 0 || micros == Double.NaN || micros < 0.0) {
+        if (micros == 0 || micros == Double.NaN || micros <= 0.0) {
             return "  0.000  s";
         }
 
