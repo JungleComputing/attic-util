@@ -94,7 +94,7 @@ public class IPUtils {
                 localaddress = doWorkGetSpecificHostAddress(tmp);
                                
                 if (localaddress == null) { 
-                    System.err.println("The specified IP address " + tmp 
+                    logger.error("The specified IP address " + tmp 
                             + " could not be found!");
                 }
             }
@@ -107,7 +107,7 @@ public class IPUtils {
                     localaddress = doWorkGetSpecificNetworkInterface(tmp, null);
                                    
                     if (localaddress == null) { 
-                        System.err.println("The specified network interface " + tmp 
+                        logger.error("The specified network interface " + tmp 
                                 + " could not be found!");
                     }
                 }
@@ -156,7 +156,7 @@ public class IPUtils {
                 alt_localaddress = doWorkGetSpecificHostAddress(tmp);
                                
                 if (alt_localaddress == null) { 
-                    System.err.println("The specified (alt) IP address " + tmp 
+                    logger.error("The specified (alt) IP address " + tmp 
                             + " could not be found!");
                 }
             }
@@ -169,7 +169,7 @@ public class IPUtils {
                     alt_localaddress = doWorkGetSpecificNetworkInterface(tmp, null);
                     
                     if (alt_localaddress == null) { 
-                        System.err.println("The specified (alt) network interface "
+                        logger.error("The specified (alt) network interface "
                                 + tmp + " could not be found!");
                     }
                 }
@@ -263,7 +263,7 @@ public class IPUtils {
         }
         
         if (address != null) { 
-            System.err.println("Specified IP address found: " + address);
+            logger.info("Specified IP address found: " + address);
             return address;
         } 
                         
@@ -459,7 +459,7 @@ public class IPUtils {
         }
     
         if (external == null) { 
-            System.err.println("Could not find local IP address, you "
+            logger.error("Could not find local IP address, you "
                     + "should specify the "
                     + "-Dibis.util.ip.address=A.B.C.D option");        
             return null;
