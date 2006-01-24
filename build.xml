@@ -49,6 +49,7 @@
 
 	<target name="javadoc" depends="compile" description="generate all javadocs">
 		<javadoc destdir="${doc}/javadoc" access="public" packagenames="ibis.util.*" sourcepath="${src}" overview="src/ibis/util/package.html">
+			<classpath refid="external_jars"/>
 			<link href="http://java.sun.com/j2se/1.4.2/docs/api/" />
 		</javadoc>
 
