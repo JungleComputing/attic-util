@@ -68,6 +68,10 @@ public class Timer implements java.io.Serializable {
         return "ibis.util.Timer";
     }
 
+    /**
+     * Adds the contents of the parameter to this timer.
+     * @param t the timer to be added.
+     */
     public synchronized void add(Timer t) {
         time += t.time;
         count += t.count;

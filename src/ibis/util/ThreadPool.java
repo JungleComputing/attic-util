@@ -5,11 +5,10 @@ import java.util.LinkedList;
 import org.apache.log4j.Logger;
 
 /**
- * @author Niels Drost
- * 
- * Threadpool which uses timeouts to determine the number of threads...
+ * Threadpool which uses timeouts to determine the number of threads.
  * There is no maximum number of threads in this pool, to prevent deadlocks.
  *
+ * @author Niels Drost.
  */
 public final class ThreadPool {
 

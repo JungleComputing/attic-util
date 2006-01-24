@@ -136,6 +136,13 @@ public final class Monitor {
         }
     }
 
+    /**
+     * Tries to enter the Monitor, without priority over other threads.
+     * If the Monitor is locked by someone else, <code>false</code> is returned.
+     * Otherwise, the lock is taken and <code>true</code> is returned.
+     * @return <code>true</code> if the attempt was succesful,
+     *    <code>false</code> otherwise.
+     */
     public synchronized boolean tryLock() {
         if (locked || (PRIORITY && prio_waiters > 0)) {
             return false;
@@ -249,6 +256,10 @@ public final class Monitor {
         }
     }
 
+    /**
+     * Returns the thread that owns this Monitor.
+     * @return the owner thread.
+     */
     public Thread getOwner() {
         return owner;
     }

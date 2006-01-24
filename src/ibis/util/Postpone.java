@@ -13,6 +13,10 @@ import java.security.PrivilegedAction;
  */
 public class Postpone {
 
+    private Postpone() {
+        // prevent construction.
+    }
+
     /**
      * Main program.
      * It finds the <code>main</code> method in the class specified by
