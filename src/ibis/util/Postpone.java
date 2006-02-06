@@ -5,6 +5,8 @@ package ibis.util;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 
 /**
  * A class that allows you to postpone starting a program for a specified
@@ -31,11 +33,32 @@ public class Postpone {
      */
     public static void main(String[] args) {
         if (args.length < 2) {
-            System.err.println("Usage: java ibis.util.Postpone <seconds> "
-                    + "<main class> ...");
+            System.err.println("Usage: java ibis.util.Postpone "
+                    + "[ -o <outputfile> ] <seconds> <main class> ...");
             System.exit(1);
         }
+
         int count = Integer.parseInt(args[0]);
+        int argsbase = 1;
+
+        if (args[1].equals("-o")) {
+            if (args.length < 4) {
+                System.err.println("Usage: java ibis.util.Postpone "
+                        + "[ -o <outputfile> ] <seconds> <main class> ...");
+                System.exit(1);
+            }
+            String outfile = args[2];
+            try {
+                FileOutputStream s = new FileOutputStream(outfile);
+                PrintStream p = new PrintStream(s);
+                System.setErr(p);
+                System.setOut(p);
+            } catch(Exception e) {
+                System.err.println("Could not write file " + outfile);
+                System.exit(1);
+            }
+            argsbase = 3;
+        }
 
         try {
             Thread.sleep(count * 1000);
@@ -46,13 +69,13 @@ public class Postpone {
         // Now, load the class.
         Class cl = null;
         try {
-            cl = Class.forName(args[1]);
+            cl = Class.forName(args[argsbase]);
         } catch (ClassNotFoundException e) {
             try {
                 cl = Thread.currentThread().getContextClassLoader()
-                        .loadClass(args[1]);
+                        .loadClass(args[argsbase]);
             } catch(ClassNotFoundException e2) {
-                System.out.println("Could not load class " + args[1]);
+                System.out.println("Could not load class " + args[argsbase]);
                 System.exit(1);
             }
         }
@@ -63,14 +86,14 @@ public class Postpone {
             m = cl.getMethod("main", new Class[] { args.getClass() });
         } catch (Exception e) {
             System.out.println("Could not find a main(String[]) in class "
-                    + args[1]);
+                    + args[argsbase]);
             System.exit(1);
         }
 
         // Create arguments array.
-        String[] args2 = new String[args.length - 2];
+        String[] args2 = new String[args.length - argsbase-1];
         for (int i = 0; i < args2.length; i++) {
-            args2[i] = args[i + 2];
+            args2[i] = args[i + argsbase + 1];
         }
 
         // Make method accessible, so that it may be called.
