@@ -57,8 +57,12 @@ public class PoolInfo {
 
     static final String s_key = PROPERTY_PREFIX + "key";
 
+    static final String s_cnum = PROPERTY_PREFIX + "num_clusters";
+
+    static final String s_csizes = PROPERTY_PREFIX + "cluster_sizes";
+
     static final String[] sysprops = { s_cluster, s_names, s_total, s_hnum,
-            s_single, s_port, s_host, s_key };
+        s_single, s_port, s_host, s_key, s_cnum, s_csizes };
 
     int total_hosts;
 
@@ -69,6 +73,10 @@ public class PoolInfo {
     InetAddress[] hosts;
 
     static String clusterName;
+
+    int num_clusters = 0;
+
+    int[] cluster_sizes = null;
 
     static {
         TypedProperties.checkProperties(PROPERTY_PREFIX, sysprops, null);
@@ -129,11 +137,37 @@ public class PoolInfo {
 
         Properties p = System.getProperties();
 
+        // p.list(System.out);
+
         total_hosts = getIntProperty(p, s_total);
         try {
             host_number = getIntProperty(p, s_hnum);
         } catch (NumberFormatException e) {
             host_number = -1;
+        }
+
+        try {
+            num_clusters = getIntProperty(p, s_cnum);
+        } catch (NumberFormatException e) {
+            num_clusters = 0;
+        }
+
+        if (num_clusters > 0) {
+            String cl_sizes = p.getProperty(s_csizes);
+            if (cl_sizes != null) {
+                cluster_sizes = new int[num_clusters];
+                StringTokenizer t = new StringTokenizer(cl_sizes, ":", false);
+                for (int i=0; i<num_clusters; i++) {
+                    try {
+                        cluster_sizes[i] = Integer.parseInt(t.nextToken());
+                    } catch (NoSuchElementException e) {
+                        throw new RuntimeException("Not enogh cluster sizes");
+                    } catch (NumberFormatException e1) {
+                        throw new RuntimeException("Invalid cluster size");
+                    }
+
+                }
+            }
         }
 
         ibisHostNames = p.getProperty(s_names);
@@ -166,9 +200,9 @@ public class PoolInfo {
 
             try {
                 /*
-                 This looks weird, but is required to get the entire hostname
-                 ie. 'java.sun.com' instead of just 'java'.
-                 */
+                   This looks weird, but is required to get the entire hostname
+                   ie. 'java.sun.com' instead of just 'java'.
+                   */
 
                 InetAddress adres = InetAddress.getByName(t);
                 adres = InetAddress.getByName(adres.getHostAddress());
@@ -179,7 +213,7 @@ public class PoolInfo {
                     System.err.println("This is probably M$ Windows. "
                             + "Restored lower case in host name " + t);
                     host_names[i] = t;
-                }
+                            }
                 hosts[i] = adres;
 
                 if (host_number == -1) {
@@ -202,6 +236,31 @@ public class PoolInfo {
 
         if (host_number >= total_hosts || host_number < 0 || total_hosts < 1) {
             throw new RuntimeException("Sanity check on host numbers failed!");
+        }
+
+        if (num_clusters > 0) {
+
+            if (total_hosts < num_clusters) {
+                throw new RuntimeException("Number of clusters > number of hosts");
+            }
+
+            int cl_size = 0;
+            int cl_nr = 0;
+            if (cluster_sizes == null) {
+                cl_size = total_hosts / num_clusters;
+                cl_nr = host_number / cl_size;
+                if (cl_nr >= num_clusters) cl_nr = num_clusters - 1;
+            } else {
+                int tmp = cluster_sizes[0];
+                cl_nr = 0;
+                while (host_number >= tmp) {
+                    cl_nr++;
+                    tmp += cluster_sizes[cl_nr];
+                }
+            }
+
+            clusterName = "cluster" + cl_nr;
+            System.err.println("host nr: " + host_number + ", cluster_nr: " + cl_nr);
         }
     }
 
@@ -338,6 +397,21 @@ public class PoolInfo {
 
         return Integer.parseInt(temp);
     }
+
+    /**
+     * Returns the rank of the host with the given
+     * inet address
+     */
+    public int getRank(InetAddress addr) {
+        for (int i=0; i<total_hosts; i++) {
+            if (hosts[i].equals(addr)) {
+                return i;
+            }
+        }
+        System.err.println("Host not found in getRank");
+        return -1;
+    }
+
 
     /**
      * Utility method to print the time used in a uniform format.
