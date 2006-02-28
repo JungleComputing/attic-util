@@ -77,6 +77,15 @@ public class Timer implements java.io.Serializable {
         count += t.count;
     }
 
+    public synchronized void add(long t, int cnt) {
+        if (nanoMode) {
+            time += 1000.0 * t;
+        } else {
+            time += t / 1000.0;
+        }
+        count += cnt;
+    }
+
     /**
      * Returns accuracy of this timer in seconds.
      * Note that this only gives an upperbound for the precision of this timer.
@@ -126,10 +135,19 @@ public class Timer implements java.io.Serializable {
      * @return total measured time.
      */
     public double totalTimeVal() {
-        if (nanoMode) {
-            return time / 1000.0;
+
+        long cur_time = 0;
+        if (started) {
+            if (nanoMode) {
+                cur_time = invokeNanoTimer() - t_start;
+            } else {
+                cur_time = System.currentTimeMillis() - t_start;
+            }
         }
-        return 1000.0 * time;
+        if (nanoMode) {
+            return (time+cur_time) / 1000.0;
+        }
+        return 1000.0 * (time+cur_time);
     }
 
     /**
