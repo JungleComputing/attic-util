@@ -10,8 +10,6 @@
 	<property name="external" location="external" />
 	<property name="jar" location="${lib}/ibis-util.jar" />
 
-	<property name="java.debug.value" value="true" />
-
 	<path id="external_jars">
 		<fileset dir="${external}">
 			<include name="*.jar" />
