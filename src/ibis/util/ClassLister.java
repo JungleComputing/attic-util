@@ -154,7 +154,8 @@ public class ClassLister {
     /**
      * Returns a list of classes for the specified attribute name.
      * The specified manifest attribute name is assumed to be
-     * mapped to the name of a class. All jar files in the classpath
+     * mapped to a comma-separated list of class names.
+     * All jar files in the classpath
      * are scanned for the specified manifest attribute name, and
      * the attribute values are loaded.
      * @param attribName the manifest attribute name.
@@ -173,15 +174,19 @@ public class ClassLister {
             }
             if (mf != null) {
                 Attributes ab = mf.getMainAttributes();
-                String className = ab.getValue(attribName);
-                if (className != null) {
-                    try {
-                        Class cl = Class.forName(className, false, ld);
-                        list.add(cl);
-                    } catch(Exception e) {
-                        throw new Error("Could not load class " + className
-                                + ". Something wrong with jar "
-                                + jarFiles[i].getName() + "?", e);
+                String classNames = ab.getValue(attribName);
+                if (classNames != null) {
+                    StringTokenizer st = new StringTokenizer(classNames, ", ");
+                    while (st.hasMoreTokens()) {
+                        String className = st.nextToken();
+                        try {
+                            Class cl = Class.forName(className, false, ld);
+                            list.add(cl);
+                        } catch(Exception e) {
+                            throw new Error("Could not load class " + className
+                                    + ". Something wrong with jar "
+                                    + jarFiles[i].getName() + "?", e);
+                        }
                     }
                 }
             }
@@ -192,7 +197,8 @@ public class ClassLister {
     /**
      * Returns a list of classes for the specified attribute name.
      * The specified manifest attribute name is assumed to be
-     * mapped to the name of a class. All jar files in the classpath
+     * mapped to a comma-separated list of class names.
+     * All jar files in the classpath
      * are scanned for the specified manifest attribute name, and
      * the attribute values are loaded.
      * The classes thus obtained should be extensions of the specified
