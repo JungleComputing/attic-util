@@ -471,4 +471,14 @@ public class IPUtils {
         detected = external;
         return external;
     }
+    
+
+    /**
+     * Returns the hostname associated with the local host.
+     */
+    public static String getLocalHostName() {
+        InetAddress tmp = getLocalHostAddress();
+
+        return tmp.getHostName();
+    }
 }
