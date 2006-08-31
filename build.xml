@@ -8,7 +8,7 @@
 	<property name="lib" location="lib" />
 	<property name="doc" location="doc" />
 	<property name="external" location="external" />
-	<property name="jar" location="${lib}/ibis-util.jar" />
+	<property name="jar" location="${lib}/ibis-util-1.0.jar" />
 
 	<path id="external_jars">
 		<fileset dir="${external}">
