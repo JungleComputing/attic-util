@@ -87,7 +87,6 @@ public final class ThreadPool {
         }
 
         public void run() {
-
             while (true) {
                 Runnable currentWork;
                 String currentName;
