@@ -15,9 +15,20 @@ import org.apache.log4j.Logger;
 public final class ThreadPool {
 
     static final Logger logger = GetLogger.getLogger(ThreadPool.class);
-
+    
     private static final class PoolThread extends Thread {
 
+        static {
+            Runtime.getRuntime().addShutdownHook(new ThreadPoolShutdown());
+        }
+
+        private static final class ThreadPoolShutdown extends Thread {
+            public void run() {
+                Logger logger = GetLogger.getLogger(ThreadPool.class);
+                logger.info("maximum number of simultaneous threads was: " + maxSimultaneousThreads);
+            }
+        }
+        
         private static final int TIMEOUT = 30 * 1000; //30 seconds 
 
         Runnable work = null;
@@ -28,8 +39,13 @@ public final class ThreadPool {
 
         private static int nrOfThreads = 0;
 
+        private static int maxSimultaneousThreads = 0;
+        
         private static synchronized void newThread() {
             nrOfThreads++;
+            if(nrOfThreads > maxSimultaneousThreads) {
+                maxSimultaneousThreads = nrOfThreads;
+            }
             logger.debug("new thread. Threadcount: " + nrOfThreads);
         }
 
@@ -46,12 +62,12 @@ public final class ThreadPool {
             this.work = runnable;
             this.name = name;
 
-             if (logger.isDebugEnabled()) {
+             if (logger.isInfoEnabled()) {
                  newThread();
              }
         }
 
-        synchronized boolean issue(Runnable newWork, String newName) {
+        private synchronized boolean issue(Runnable newWork, String newName) {
             if (expired) {
                 logger.debug("issue(): thread has expired");
                 return false;
@@ -64,7 +80,8 @@ public final class ThreadPool {
 
             work = newWork;
             name = newName;
-
+            logger.debug("issue(): reusing thread");
+            
             notifyAll();
             return true;
         }
@@ -82,7 +99,7 @@ public final class ThreadPool {
                             wait(TIMEOUT);
                         } catch (InterruptedException e) {
                             expired = true;
-                            if (logger.isDebugEnabled()) {
+                            if (logger.isInfoEnabled()) {
                                 threadGone();
                             }
                             return;
@@ -91,7 +108,7 @@ public final class ThreadPool {
                     if (this.work == null) {
                         //still no work, exit
                         expired = true;
-                        if (logger.isDebugEnabled()) {
+                        if (logger.isInfoEnabled()) {
                             threadGone();
                         }
                         return;
@@ -123,7 +140,7 @@ public final class ThreadPool {
         //DO NOT USE
     }
 
-    static synchronized void waiting(PoolThread thread) {
+    private static synchronized void waiting(PoolThread thread) {
         threadPool.add(thread);
     }
 
@@ -152,7 +169,6 @@ public final class ThreadPool {
                         + threadPool.size());
             }
             threadPool.clear();
-
         }
 
         //no usable thread found, create a new thread
@@ -160,5 +176,4 @@ public final class ThreadPool {
         poolThread.setDaemon(true);
         poolThread.start();
     }
-
 }
