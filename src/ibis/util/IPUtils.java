@@ -9,6 +9,8 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
 
+import smartsockets.util.NetworkUtils;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -239,14 +241,7 @@ public class IPUtils {
             subnet = addressToBytes(ha.substring(0, index));
             netmask = addressToBytes(ha.substring(index + 1));
 
-            InetAddress[] all = null;
-
-            try {
-                String hostname = InetAddress.getLocalHost().getHostName();
-                all = InetAddress.getAllByName(hostname);
-            } catch (UnknownHostException e) {
-                logger.debug("Unable to retrieve any IP addresses!");
-            }
+            InetAddress[] all = NetworkUtils.getAllHostAddresses();
 
             if (all != null) {
                 for (int i = 0; i < all.length; i++) {
@@ -426,13 +421,7 @@ public class IPUtils {
 
         InetAddress external = null;
 
-        InetAddress[] all = null;
-        try {
-            String hostname = InetAddress.getLocalHost().getHostName();
-            all = InetAddress.getAllByName(hostname);
-        } catch (java.net.UnknownHostException e) {
-            logger.debug("InetAddress.getLocalHost().getHostName() failed");
-        }
+        InetAddress[] all = NetworkUtils.getAllHostAddresses();
         
         if (all != null) {
             for (int i = 0; i < all.length; i++) {
@@ -477,8 +466,12 @@ public class IPUtils {
      * Returns the hostname associated with the local host.
      */
     public static String getLocalHostName() {
-        InetAddress tmp = getLocalHostAddress();
-
-        return tmp.getHostName();
+        try {
+            return NetworkUtils.getHostname();
+        } catch(java.io.IOException e) {
+            logger.info("IOException in NetworkUtils.getHostname()", e);
+            // ignored
+        }
+        return getLocalHostAddress().getHostName();
     }
 }
