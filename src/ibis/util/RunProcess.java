@@ -45,7 +45,7 @@ public final class RunProcess {
     private int exitstatus;
 
     /** The <code>Process</code> object for the command. */
-    private Process p;
+    private Process p = null;
 
     /** Collects stdout of process. */
     private buf proc_out;
@@ -96,15 +96,27 @@ public final class RunProcess {
         }
     }
 
+    private RunProcess() {
+
+        exitstatus = -1;
+
+        Runtime.getRuntime().addShutdownHook(
+                new Thread("RunProcess ShutdownHook") {
+                    public void run() {
+                        if (p != null) {
+                            p.destroy();
+                        }
+                    }
+                });
+    }
+
     /**
      * Runs the command as specified.
      * Blocks until the command is finished.
      * @param command the specified command.
      */
     public RunProcess(String command) {
-
-        exitstatus = -1;
-
+        this();
         try {
             p = r.exec(command);
         } catch (Exception e) {
@@ -124,9 +136,7 @@ public final class RunProcess {
      * @param env the environment.
      */
     public RunProcess(String[] command, String env[]) {
-
-        exitstatus = -1;
-
+        this();
         try {
             p = r.exec(command, env);
         } catch (Exception e) {
@@ -150,9 +160,7 @@ public final class RunProcess {
      * @param dir dir - the working directory of the command, or <code>null</code> for the working directory of this process.
      */
     public RunProcess(String[] command, String env[],File dir) {
-
-        exitstatus = -1;
-
+        this();
         try {
             p = r.exec(command, env,dir);
         } catch (Exception e) {
