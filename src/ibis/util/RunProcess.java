@@ -97,17 +97,7 @@ public final class RunProcess {
     }
 
     private RunProcess() {
-
         exitstatus = -1;
-
-        Runtime.getRuntime().addShutdownHook(
-                new Thread("RunProcess ShutdownHook") {
-                    public void run() {
-                        if (p != null) {
-                            p.destroy();
-                        }
-                    }
-                });
     }
 
     /**

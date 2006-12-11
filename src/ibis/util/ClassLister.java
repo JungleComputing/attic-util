@@ -24,7 +24,8 @@ public class ClassLister {
 
     private ClassLoader ld = null;
 
-    private static HashMap listers = new HashMap();
+    private static HashMap<String, ClassLister> listers
+            = new HashMap<String, ClassLister>();
 
     private static ClassLister classPathLister = null;
 
@@ -87,7 +88,7 @@ public class ClassLister {
      * in a list that can be searched for specific names later on.
      */
     protected void readJarFiles() {
-        ArrayList jarList = new ArrayList();
+        ArrayList<JarFile> jarList = new ArrayList<JarFile>();
         String classPath = System.getProperty("java.class.path");
         if (classPath != null) {
             StringTokenizer st = new StringTokenizer(classPath,
@@ -107,10 +108,10 @@ public class ClassLister {
                 }
             }
         }
-        jarFiles = (JarFile[]) jarList.toArray(new JarFile[0]);
+        jarFiles = jarList.toArray(new JarFile[0]);
     }
 
-    private void addJarFiles(String dir, ArrayList jarList) {
+    private void addJarFiles(String dir, ArrayList<JarFile> jarList) {
         File f = new File(dir);
         File[] files = f.listFiles();
         if (files == null) {
@@ -140,7 +141,7 @@ public class ClassLister {
      * <code>java.io.File.pathSeparator</code>.
      */
     protected void readJarFiles(String dirList) {
-        ArrayList jarList = new ArrayList();
+        ArrayList<JarFile> jarList = new ArrayList<JarFile>();
 
         StringTokenizer st = new StringTokenizer(dirList, File.pathSeparator);
 
@@ -148,7 +149,7 @@ public class ClassLister {
             String dir = st.nextToken();
             addJarFiles(dir, jarList);
         }
-        jarFiles = (JarFile[]) jarList.toArray(new JarFile[0]);
+        jarFiles = jarList.toArray(new JarFile[0]);
     }
 
     /**
@@ -161,8 +162,8 @@ public class ClassLister {
      * @param attribName the manifest attribute name.
      * @return the list of classes.
      */
-    public List getClassList(String attribName) {
-        ArrayList list = new ArrayList();
+    public List<Class> getClassList(String attribName) {
+        ArrayList<Class> list = new ArrayList<Class>();
 
         for (int i = 0; i < jarFiles.length; i++) {
             Manifest mf = null;
@@ -208,11 +209,11 @@ public class ClassLister {
      *    or extensions.       
      * @return the list of classes.
      */
-    public List getClassList(String attribName, Class clazz) {
-        List list = getClassList(attribName);
+    public List<Class> getClassList(String attribName, Class<?> clazz) {
+        List<Class> list = getClassList(attribName);
 
-        for (Iterator iter = list.iterator(); iter.hasNext();) {
-            Class cl = (Class) iter.next();
+        for (Iterator<Class> iter = list.iterator(); iter.hasNext();) {
+            Class<?> cl = iter.next();
             if (! clazz.isAssignableFrom(cl)) {
                 throw new Error("Class " + cl.getName()
                         + " cannot be assigned to class " + clazz.getName());

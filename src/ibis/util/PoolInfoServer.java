@@ -129,7 +129,7 @@ public class PoolInfoServer extends Thread {
         }
     }
 
-    private HashMap map = new HashMap();
+    private HashMap<String, RunInfo> map = new HashMap<String, RunInfo>();
 
     private ServerSocket serverSocket;
 
@@ -224,7 +224,7 @@ public class PoolInfoServer extends Thread {
                 int total_hosts = in.readInt();
                 int remove_doubles = in.readInt();
                 String cluster = in.readUTF();
-                RunInfo r = (RunInfo) map.get(key);
+                RunInfo r = map.get(key);
                 if (r == null) {
                     r = new RunInfo(total_hosts, key);
                     map.put(key, r);

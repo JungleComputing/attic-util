@@ -101,7 +101,7 @@ public class Postpone {
         // it lives in may not be.
         if (!m.isAccessible()) {
             final Method temporary_method = m;
-            AccessController.doPrivileged(new PrivilegedAction() {
+            AccessController.doPrivileged(new PrivilegedAction<Object>() {
                 public Object run() {
                     temporary_method.setAccessible(true);
                     return null;

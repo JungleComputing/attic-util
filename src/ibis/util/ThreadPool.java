@@ -119,7 +119,11 @@ public final class ThreadPool {
                     setName(currentName);
                     currentWork.run();
                 } catch (Throwable t) {
-                    logger.error("caught exception in pool thread " + currentName, t);
+                    logger.fatal("caught exception in pool thread " + currentName, t);
+                    // Exit, rather than continue. A thread died unexpectedly,
+                    // after all. If you dont want this, catch all throwables
+                    // yourself.
+                    System.exit(1);
                 }
                 synchronized (this) {
                     this.work = null;
@@ -130,7 +134,8 @@ public final class ThreadPool {
     }
 
     //list of waiting Poolthreads
-    private static final LinkedList threadPool = new LinkedList();
+    private static final LinkedList<PoolThread> threadPool
+            = new LinkedList<PoolThread>();
 
     /**
      * Prevent creation of a threadpool object.
