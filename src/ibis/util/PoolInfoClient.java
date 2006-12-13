@@ -3,7 +3,9 @@
 package ibis.util;
 
 import java.io.DataOutputStream;
+import java.io.BufferedOutputStream;
 import java.io.ObjectInputStream;
+import java.io.BufferedInputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -156,7 +158,7 @@ public class PoolInfoClient extends PoolInfo {
         }
         try {
             DataOutputStream out = new DataOutputStream(
-                    socket.getOutputStream());
+                    new BufferedOutputStream(socket.getOutputStream()));
             out.writeUTF(key);
             out.writeInt(total_hosts);
             out.writeInt(remove_doubles);
@@ -164,7 +166,7 @@ public class PoolInfoClient extends PoolInfo {
             out.flush();
 
             ObjectInputStream in = new ObjectInputStream(
-                    socket.getInputStream());
+                    new BufferedInputStream(socket.getInputStream()));
             host_number = in.readInt();
             if (host_number == -1) {
                 in.close();

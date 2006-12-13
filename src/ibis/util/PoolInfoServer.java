@@ -3,8 +3,10 @@
 package ibis.util;
 
 import java.io.DataInputStream;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.BufferedOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -82,8 +84,9 @@ public class PoolInfoServer extends Thread {
             if (remove_doubles != 0) {
                 for (int i = 0; i < connected_hosts; i++) {
                     if (host_addresses[i].equals(addr)) {
-                        ObjectOutputStream out
-                            = new ObjectOutputStream(socket.getOutputStream());
+                        ObjectOutputStream out = new ObjectOutputStream(
+                                new BufferedOutputStream(
+                                    socket.getOutputStream()));
                         out.writeInt(-1);
                         out.close();
                         in.close();
@@ -113,8 +116,9 @@ public class PoolInfoServer extends Thread {
             total_hosts -= removed_hosts;
 
             for (int i = 0; i < total_hosts; i++) {
-                ObjectOutputStream out
-                    = new ObjectOutputStream(host_sockets[i].getOutputStream());
+                ObjectOutputStream out = new ObjectOutputStream(
+                        new BufferedOutputStream(
+                            host_sockets[i].getOutputStream()));
                 out.writeInt(i); //give the node a rank
                 out.writeInt(total_hosts);
                 out.writeObject(host_clusters);
@@ -213,13 +217,14 @@ public class PoolInfoServer extends Thread {
         DataInputStream in;
         boolean stop = false;
 
-        try {
-            while (!stop) {
+        while (!stop) {
+            try {
                 logger.debug("PoolInfoServer: starting run, "
                         + "listening on port " + port
                         + " waiting for a host to connect...");
                 socket = serverSocket.accept();
-                in = new DataInputStream(socket.getInputStream());
+                in = new DataInputStream(
+                        new BufferedInputStream(socket.getInputStream()));
                 String key = in.readUTF();
                 int total_hosts = in.readInt();
                 int remove_doubles = in.readInt();
@@ -237,10 +242,20 @@ public class PoolInfoServer extends Thread {
                         stop = map.isEmpty();
                     }
                 }
+            } catch(Throwable e) {
+                logger.warn("PoolInfoServer: got exception:", e);
+                // Continue. This is a server, after all.
+                try {
+                    Thread.sleep(1000);
+                } catch(Exception e1) {
+                    // ignored
+                }
             }
+        }
+        try {
             serverSocket.close();
         } catch (IOException e) {
-            throw new RuntimeException("Got IO exception");
+            // ignored
         }
     }
 }
