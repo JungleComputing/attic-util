@@ -156,8 +156,10 @@ public class PoolInfoClient extends PoolInfo {
                 }
             }
         }
+        DataOutputStream out = null;
+        ObjectInputStream in = null;
         try {
-            DataOutputStream out = new DataOutputStream(
+            out = new DataOutputStream(
                     new BufferedOutputStream(socket.getOutputStream()));
             out.writeUTF(key);
             out.writeInt(total_hosts);
@@ -165,13 +167,10 @@ public class PoolInfoClient extends PoolInfo {
             out.writeUTF(clusterName);
             out.flush();
 
-            ObjectInputStream in = new ObjectInputStream(
+            in = new ObjectInputStream(
                     new BufferedInputStream(socket.getInputStream()));
             host_number = in.readInt();
             if (host_number == -1) {
-                in.close();
-                out.close();
-                socket.close();
                 throw new RuntimeException("This node is already registered");
             }
             total_hosts = in.readInt();
@@ -182,11 +181,20 @@ public class PoolInfoClient extends PoolInfo {
                 host_names[i] = hosts[i].getHostName();
             }
 
-            in.close();
-            out.close();
-            socket.close();
         } catch (Exception e) {
             throw new RuntimeException("Got exception: " + e);
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+                if (in != null) {
+                    in.close();
+                }
+                socket.close();
+            } catch(Exception e) {
+                // ignored
+            }
         }
 
         if (host_number >= total_hosts || host_number < 0 || total_hosts < 1) {

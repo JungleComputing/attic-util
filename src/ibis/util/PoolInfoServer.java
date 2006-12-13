@@ -124,8 +124,8 @@ public class PoolInfoServer extends Thread {
                 out.writeObject(host_clusters);
                 out.writeObject(host_addresses);
 
-                host_inputs[i].close();
                 out.close();
+                host_inputs[i].close();
                 host_sockets[i].close();
             }
 
