@@ -8,6 +8,8 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
+import smartsockets.direct.IPAddressSet;
+
 /**
  * The <code>PoolInfo</code> class provides a utility for finding out
  * information about the nodes involved in a closed-world run.
@@ -70,14 +72,19 @@ public class PoolInfo {
 
     String[] host_names;
 
-    InetAddress[] hosts;
-
+    InetAddress [] hosts;
+    
+    // Dirty Hack for Mathijs --- Jason
+    IPAddressSet completeLocalAddress;
+    IPAddressSet [] completeHosts;
+    // End hack...
+    
     static String clusterName;
 
     int num_clusters = 0;
 
     int[] cluster_sizes = null;
-
+    
     static {
         TypedProperties.checkProperties(PROPERTY_PREFIX, sysprops, null);
         clusterName = TypedProperties.stringProperty(s_cluster);
@@ -120,7 +127,13 @@ public class PoolInfo {
 
         host_names = new String[total_hosts];
         hosts = new InetAddress[total_hosts];
-
+        
+        // Dirty Hack for Mathijs --- Jason
+        completeLocalAddress = IPAddressSet.getLocalHost();
+        completeHosts = new IPAddressSet[total_hosts];
+        completeHosts[0] = completeLocalAddress;
+        // End hack...
+        
         try {
             InetAddress adres = InetAddress.getLocalHost();
             adres = InetAddress.getByName(adres.getHostAddress());
@@ -262,6 +275,15 @@ public class PoolInfo {
             clusterName = "cluster" + cl_nr;
             System.err.println("host nr: " + host_number + ", cluster_nr: " + cl_nr);
         }
+        
+        // Dirty Hack for Mathijs --- Jason
+        //
+        // NOTE: This doesn't work since we don't known the 'real' addresses 
+        //       of the machines! 
+        completeLocalAddress = IPAddressSet.getLocalHost();
+        completeHosts = new IPAddressSet[total_hosts];
+        completeHosts[host_number] = completeLocalAddress;
+        // End hack...
     }
 
     /**
@@ -376,6 +398,15 @@ public class PoolInfo {
      */
     public String hostName(int rank) {
         return host_names[rank];
+    }
+    
+    /**
+     * Returns the complete set IPAddresses of the host with the given rank.
+     * @param rank the rank number.
+     * @return the IPAddressSEt with all the IP addresses available on the host
+     */
+    public IPAddressSet completeAddress(int rank) {
+        return completeHosts[rank];
     }
 
     /**
