@@ -10,6 +10,9 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import smartsockets.direct.IPAddressSet;
+import smartsockets.util.NetworkUtils;
+
 /**
  * The <code>PoolInfoClient</code> class provides a utility for finding out
  * information about the nodes involved in a closed-world run.
@@ -83,6 +86,10 @@ public class PoolInfoClient extends PoolInfo {
     private PoolInfoClient() {
         super(0);
 
+        // Dirty hack for Mathijs --- Jason
+        completeLocalAddress = IPAddressSet.getLocalHost();
+        // End hack...
+        
         InetAddress serverAddress;
         InetAddress myAddress = IPUtils.getAlternateLocalHostAddress();
 
@@ -96,7 +103,8 @@ public class PoolInfoClient extends PoolInfo {
             if (serverPort == -1) {
                 serverPort = PoolInfoServer.POOL_INFO_PORT;
             } else {
-                serverPort++;
+                serverPort++;IPAddressSet.getLocalHost();
+                
             }
         }
         String serverName = TypedProperties.stringProperty(s_host);
@@ -156,15 +164,22 @@ public class PoolInfoClient extends PoolInfo {
                 }
             }
         }
+        
         DataOutputStream out = null;
         ObjectInputStream in = null;
         try {
             out = new DataOutputStream(
                     new BufferedOutputStream(socket.getOutputStream()));
+           
             out.writeUTF(key);
             out.writeInt(total_hosts);
             out.writeInt(remove_doubles);
             out.writeUTF(clusterName);
+            
+            // Dirty hack for Mathijs --- Jason
+            out.writeUTF(completeLocalAddress.toString());
+            // End hack...
+            
             out.flush();
 
             in = new ObjectInputStream(
@@ -176,7 +191,11 @@ public class PoolInfoClient extends PoolInfo {
             total_hosts = in.readInt();
             host_clusters = (String[]) in.readObject();
             hosts = (InetAddress[]) in.readObject();
+            completeHosts = (IPAddressSet []) in.readObject();
+            
             host_names = new String[total_hosts];
+            
+            
             for (int i = 0; i < total_hosts; i++) {
                 host_names[i] = hosts[i].getHostName();
             }
@@ -218,7 +237,8 @@ public class PoolInfoClient extends PoolInfo {
         String result = "pool info: size = " + total_hosts + "; my rank is "
                 + host_number + "; host list:\n";
         for (int i = 0; i < total_hosts; i++) {
-            result += i + ": address= " + hosts[i] + " cluster="
+            result += i + ": address=" + hosts[i] + " complete=" + 
+                completeHosts[i].toString() + " cluster="
                     + host_clusters[i] + "\n";
         }
         return result;
