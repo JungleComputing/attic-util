@@ -14,6 +14,8 @@ import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 
+import smartsockets.direct.IPAddressSet;
+
 
 /**
  * A <code>PoolInfoServer</code> runs as a separate program or thread, and
@@ -52,6 +54,8 @@ public class PoolInfoServer extends Thread {
 
         InetAddress[] host_addresses;
 
+        IPAddressSet [] completeAddresses;
+        
         Socket[] host_sockets;
 
         DataInputStream[] host_inputs;
@@ -64,13 +68,16 @@ public class PoolInfoServer extends Thread {
             removed_hosts = 0;
             host_clusters = new String[nhosts];
             host_addresses = new InetAddress[nhosts];
+            completeAddresses = new IPAddressSet[nhosts];
             host_sockets = new Socket[nhosts];
             host_inputs = new DataInputStream[nhosts];
             this.key = key;
         }
 
         boolean add(int nhosts, int remove_doubles, String cluster,
-                Socket socket, DataInputStream in) throws IOException {
+                IPAddressSet completeAddress, Socket socket, DataInputStream in) 
+            throws IOException {
+
             if (nhosts != total_hosts) {
                 System.err.println("PoolInfoServer: EEK, different total_hosts"
                         + " in PoolInfoServer, ignoring this connection...");
@@ -102,6 +109,7 @@ public class PoolInfoServer extends Thread {
                     + " has connected");
             host_clusters[connected_hosts] = cluster;
             host_addresses[connected_hosts] = addr;
+            completeAddresses[connected_hosts] = completeAddress;
             host_sockets[connected_hosts] = socket;
             host_inputs[connected_hosts] = in;
             connected_hosts++;
@@ -123,7 +131,8 @@ public class PoolInfoServer extends Thread {
                 out.writeInt(total_hosts);
                 out.writeObject(host_clusters);
                 out.writeObject(host_addresses);
-
+                out.writeObject(completeAddresses);
+                
                 out.close();
                 host_inputs[i].close();
                 host_sockets[i].close();
@@ -229,13 +238,19 @@ public class PoolInfoServer extends Thread {
                 int total_hosts = in.readInt();
                 int remove_doubles = in.readInt();
                 String cluster = in.readUTF();
+                
+                IPAddressSet completeAddress = 
+                        IPAddressSet.getFromString(in.readUTF());
+                
                 RunInfo r = map.get(key);
                 if (r == null) {
                     r = new RunInfo(total_hosts, key);
                     map.put(key, r);
                 }
 
-                if (r.add(total_hosts, remove_doubles, cluster, socket, in)) {
+                if (r.add(total_hosts, remove_doubles, cluster, completeAddress, 
+                        socket, in)) {
+                    
                     map.remove(key);
                     r.broadcast();
                     if (singleRun) {
