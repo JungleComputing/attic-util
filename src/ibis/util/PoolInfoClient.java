@@ -35,21 +35,21 @@ import smartsockets.util.NetworkUtils;
  * must contain the cluster name of the current node. If not present,
  * "unknown" is used.
  * <br>
- * <pre>ibis.pool.key</pre>
- * must contain the key identifying the current run. If not present,
- * the <code>ibis.name_server.key</code> is tried. If that is not present
+ * <pre>ibis.pool.pool</pre>
+ * must contain the poolId identifying the current run. If not present,
+ * the <code>ibis.registry.pool</code> is tried. If that is not present
  * either, "unknown" is used.
  * <br>
  * <pre>ibis.pool.server.port</pre>
  * must contain the port number on which the <code>PoolInfoServer</code>
- * is accepting connections. If not present, <code>ibis.name_server.port</code>
+ * is accepting connections. If not present, <code>ibis.registry.port</code>
  * is tried. If present, 1 is added and that is used as port number. If not,
  * the default is used.
  * <br>
  * <pre>ibis.pool.server.host</pre>
  * must contain the hostname of the host on which the
  * <code>PoolInfoServer</code> runs. If not present,
- * <code>ibis.name_server.host</code> is tried.
+ * <code>ibis.registry.host</code> is tried.
  * One of the two system properties must be defined.
  * <br>
  */
@@ -98,7 +98,7 @@ public class PoolInfoClient extends PoolInfo {
 
         int serverPort = TypedProperties.intProperty(s_port, -1);
         if (serverPort == -1) {
-            serverPort = TypedProperties.intProperty("ibis.name_server.port",
+            serverPort = TypedProperties.intProperty("ibis.registry.port",
                     -1);
             if (serverPort == -1) {
                 serverPort = PoolInfoServer.POOL_INFO_PORT;
@@ -110,7 +110,7 @@ public class PoolInfoClient extends PoolInfo {
         String serverName = TypedProperties.stringProperty(s_host);
         if (serverName == null) {
             serverName
-                    = TypedProperties.stringProperty("ibis.name_server.host");
+                    = TypedProperties.stringProperty("ibis.registry.host");
             if (serverName == null) {
                 throw new RuntimeException("property " + s_host
                         + " is not specified");
@@ -121,11 +121,11 @@ public class PoolInfoClient extends PoolInfo {
             serverName = myAddress.getHostName();
         }
 
-        String key = TypedProperties.stringProperty(s_key);
-        if (key == null) {
-            key = TypedProperties.stringProperty("ibis.name_server.key");
-            if (key == null) {
-                key = "unknown";
+        String pool = TypedProperties.stringProperty(s_pool);
+        if (pool == null) {
+            pool = TypedProperties.stringProperty("ibis.registry.pool");
+            if (pool == null) {
+                pool = "unknown";
             }
         }
         try {
@@ -171,7 +171,7 @@ public class PoolInfoClient extends PoolInfo {
             out = new DataOutputStream(
                     new BufferedOutputStream(socket.getOutputStream()));
            
-            out.writeUTF(key);
+            out.writeUTF(pool);
             out.writeInt(total_hosts);
             out.writeInt(remove_doubles);
             out.writeUTF(clusterName);

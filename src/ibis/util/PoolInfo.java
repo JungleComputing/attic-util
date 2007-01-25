@@ -57,14 +57,14 @@ public class PoolInfo {
 
     static final String s_host = PROPERTY_PREFIX + "server.host";
 
-    static final String s_key = PROPERTY_PREFIX + "key";
+    static final String s_pool = PROPERTY_PREFIX + "pool";
 
     static final String s_cnum = PROPERTY_PREFIX + "num_clusters";
 
     static final String s_csizes = PROPERTY_PREFIX + "cluster_sizes";
 
     static final String[] sysprops = { s_cluster, s_names, s_total, s_hnum,
-        s_single, s_port, s_host, s_key, s_cnum, s_csizes };
+        s_single, s_port, s_host, s_pool, s_cnum, s_csizes };
 
     int total_hosts;
 

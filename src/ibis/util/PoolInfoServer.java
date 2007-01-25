@@ -21,8 +21,8 @@ import smartsockets.direct.IPAddressSet;
  * A <code>PoolInfoServer</code> runs as a separate program or thread, and
  * collects information about nodes involved in a run. It is a bit like
  * the Ibis nameserver, but can be used by application programs.
- * An application run is identified by a key. Each node involved in the
- * run sends this key, the total number of hosts, and its cluster name
+ * An application run is identified by a poolId. Each node involved in the
+ * run sends this poolId, the total number of hosts, and its cluster name
  * to the <code>PoolInfoServer</code>. When all nodes involved in the run
  * have sent their data, the <code>PoolInfoServer</code> sends back the
  * following information to each node:
@@ -60,9 +60,9 @@ public class PoolInfoServer extends Thread {
 
         DataInputStream[] host_inputs;
 
-        String key;
+        String pool;
 
-        RunInfo(int nhosts, String key) {
+        RunInfo(int nhosts, String pool) {
             total_hosts = nhosts;
             connected_hosts = 0;
             removed_hosts = 0;
@@ -71,7 +71,7 @@ public class PoolInfoServer extends Thread {
             completeAddresses = new IPAddressSet[nhosts];
             host_sockets = new Socket[nhosts];
             host_inputs = new DataInputStream[nhosts];
-            this.key = key;
+            this.pool = pool;
         }
 
         boolean add(int nhosts, int remove_doubles, String cluster,
@@ -103,7 +103,7 @@ public class PoolInfoServer extends Thread {
                     }
                 }
             }
-            logger.debug("PoolInfoServer: Key " + key + " Host "
+            logger.debug("PoolInfoServer: Pool " + pool + " Host "
                     + connected_hosts + " ("
                     + socket.getInetAddress().getHostName() + ")"
                     + " has connected");
@@ -117,7 +117,7 @@ public class PoolInfoServer extends Thread {
         }
 
         void broadcast() throws IOException {
-            logger.debug("PoolInfoServer: Key " + key
+            logger.debug("PoolInfoServer: Pool " + pool
                     + ": All hosts have connected, "
                     + "now broadcasting host info...");
 
@@ -138,7 +138,7 @@ public class PoolInfoServer extends Thread {
                 host_sockets[i].close();
             }
 
-            logger.debug("PoolInfoServer: Key " + key + ": Broadcast done");
+            logger.debug("PoolInfoServer: Pool " + pool + ": Broadcast done");
         }
     }
 
@@ -154,7 +154,7 @@ public class PoolInfoServer extends Thread {
      * The parameters accepted are:
      * <br>
      * <code>-single</code>&nbsp&nbsp&nbsp
-     * a "single" run: exit as soon as no key is being processed anymore.
+     * a "single" run: exit as soon as no pool is being processed anymore.
      * <br>
      * <code>-port</code> <i>portnum</i>&nbsp&nbsp&nbsp
      * accept connections on port <i>portnum</i> instead of on the default port.
@@ -187,7 +187,7 @@ public class PoolInfoServer extends Thread {
      * connections on the specified port.
      * @param port the port number to accept connections on.
      * @param single when <code>true</code>, the server returns as soon
-     *               as no keys are being processed anymore.
+     *               as no pools are being processed anymore.
      */
     public PoolInfoServer(int port, boolean single) {
         singleRun = single;
@@ -203,7 +203,7 @@ public class PoolInfoServer extends Thread {
      * Creates a <code>PoolInfoServer</code> that will accept
      * connections on the default port.
      * @param single when <code>true</code>, the server returns as soon
-     *               as no keys are being processed anymore.
+     *               as no pools are being processed anymore.
      */
     public PoolInfoServer(boolean single) {
         this(TypedProperties.intProperty(PoolInfo.s_port, POOL_INFO_PORT),
@@ -213,8 +213,8 @@ public class PoolInfoServer extends Thread {
     /**
      * Main loop of the <code>PoolInfoServer</code>.
      * Accepts new connections and processes the information sent.
-     * As soon as all data associated with a key is available, it
-     * is broadcasted among all members of the run, and the key is
+     * As soon as all data associated with a pool is available, it
+     * is broadcasted among all members of the run, and the pool is
      * made available for future runs.
      */
     public void run() {
@@ -234,7 +234,7 @@ public class PoolInfoServer extends Thread {
                 socket = serverSocket.accept();
                 in = new DataInputStream(
                         new BufferedInputStream(socket.getInputStream()));
-                String key = in.readUTF();
+                String pool = in.readUTF();
                 int total_hosts = in.readInt();
                 int remove_doubles = in.readInt();
                 String cluster = in.readUTF();
@@ -242,16 +242,16 @@ public class PoolInfoServer extends Thread {
                 IPAddressSet completeAddress = 
                         IPAddressSet.getFromString(in.readUTF());
                 
-                RunInfo r = map.get(key);
+                RunInfo r = map.get(pool);
                 if (r == null) {
-                    r = new RunInfo(total_hosts, key);
-                    map.put(key, r);
+                    r = new RunInfo(total_hosts, pool);
+                    map.put(pool, r);
                 }
 
                 if (r.add(total_hosts, remove_doubles, cluster, completeAddress, 
                         socket, in)) {
                     
-                    map.remove(key);
+                    map.remove(pool);
                     r.broadcast();
                     if (singleRun) {
                         stop = map.isEmpty();
