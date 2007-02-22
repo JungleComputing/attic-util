@@ -66,6 +66,9 @@ public class PoolInfo {
     static final String[] sysprops = { s_cluster, s_names, s_total, s_hnum,
         s_single, s_port, s_host, s_pool, s_cnum, s_csizes };
 
+    static final TypedProperties props = new TypedProperties(
+            System.getProperties());
+
     int total_hosts;
 
     int host_number;
@@ -86,8 +89,8 @@ public class PoolInfo {
     int[] cluster_sizes = null;
     
     static {
-        TypedProperties.checkProperties(PROPERTY_PREFIX, sysprops, null);
-        clusterName = TypedProperties.stringProperty(s_cluster);
+        props.checkProperties(PROPERTY_PREFIX, sysprops, null, true);
+        clusterName = props.getProperty(s_cluster);
         if (clusterName == null) {
             clusterName = "unknown";
         }
@@ -469,7 +472,7 @@ public class PoolInfo {
         if (forceSeq) {
             return new PoolInfo(true);
         }
-        if (TypedProperties.stringProperty(s_names) != null) {
+        if (props.getProperty(s_names) != null) {
             return new PoolInfo();
         }
         try {

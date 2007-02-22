@@ -206,8 +206,8 @@ public class PoolInfoServer extends Thread {
      *               as no pools are being processed anymore.
      */
     public PoolInfoServer(boolean single) {
-        this(TypedProperties.intProperty(PoolInfo.s_port, POOL_INFO_PORT),
-                single);
+        this(new TypedProperties(System.getProperties()).getIntProperty(
+                    PoolInfo.s_port, POOL_INFO_PORT), single);
     }
 
     /**

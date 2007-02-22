@@ -9,6 +9,7 @@ import java.io.BufferedInputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Properties;
 
 import smartsockets.direct.IPAddressSet;
 import smartsockets.util.NetworkUtils;
@@ -78,12 +79,12 @@ public class PoolInfoClient extends PoolInfo {
      */
     public static PoolInfoClient create() {
         if (instance == null) {
-            instance = new PoolInfoClient();
+            instance = new PoolInfoClient(System.getProperties());
         }
         return instance;
     }
 
-    private PoolInfoClient() {
+    private PoolInfoClient(Properties prop) {
         super(0);
 
         // Dirty hack for Mathijs --- Jason
@@ -92,13 +93,14 @@ public class PoolInfoClient extends PoolInfo {
         
         InetAddress serverAddress;
         InetAddress myAddress = IPUtils.getAlternateLocalHostAddress();
+        TypedProperties props = new TypedProperties(prop);
 
-        total_hosts = TypedProperties.intProperty(s_total);
-        int remove_doubles = TypedProperties.booleanProperty(s_single) ? 1 : 0;
+        total_hosts = props.getIntProperty(s_total);
+        int remove_doubles = props.booleanProperty(s_single) ? 1 : 0;
 
-        int serverPort = TypedProperties.intProperty(s_port, -1);
+        int serverPort = props.getIntProperty(s_port, -1);
         if (serverPort == -1) {
-            serverPort = TypedProperties.intProperty("ibis.registry.port",
+            serverPort = props.getIntProperty("ibis.registry.port",
                     -1);
             if (serverPort == -1) {
                 serverPort = PoolInfoServer.POOL_INFO_PORT;
@@ -107,10 +109,10 @@ public class PoolInfoClient extends PoolInfo {
                 
             }
         }
-        String serverName = TypedProperties.stringProperty(s_host);
+        String serverName = props.getProperty(s_host);
         if (serverName == null) {
             serverName
-                    = TypedProperties.stringProperty("ibis.registry.host");
+                    = props.getProperty("ibis.registry.host");
             if (serverName == null) {
                 throw new RuntimeException("property " + s_host
                         + " is not specified");
@@ -121,9 +123,9 @@ public class PoolInfoClient extends PoolInfo {
             serverName = myAddress.getHostName();
         }
 
-        String pool = TypedProperties.stringProperty(s_pool);
+        String pool = props.getProperty(s_pool);
         if (pool == null) {
-            pool = TypedProperties.stringProperty("ibis.registry.pool");
+            pool = props.getProperty("ibis.registry.pool");
             if (pool == null) {
                 pool = "unknown";
             }

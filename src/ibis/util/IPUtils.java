@@ -30,9 +30,8 @@ public class IPUtils {
     private static final String[] sysprops =
             { addr, alt_addr, networkInterface, altNetworkInterface };
 
-    static {
-        TypedProperties.checkProperties(prefix, sysprops, null);
-    }
+    private static final UtilProperties props = new UtilProperties(
+            System.getProperties(), prefix, sysprops);
 
     private static InetAddress localaddress = null;
 
@@ -91,7 +90,7 @@ public class IPUtils {
         if (localaddress == null) {
 
             // Check if an IP address is specified by the user.
-            String tmp = System.getProperties().getProperty(addr);
+            String tmp = props.getProperty(addr);
 
             if (tmp != null) {
                 localaddress = doWorkGetSpecificHostAddress(tmp);
@@ -104,7 +103,7 @@ public class IPUtils {
 
             if (localaddress == null) {
                 // Check if a  network interface is specified by the user.
-                tmp = System.getProperties().getProperty(networkInterface);
+                tmp = props.getProperty(networkInterface);
 
                 if (tmp != null) {
                     localaddress = doWorkGetSpecificNetworkInterface(tmp, null);
@@ -153,7 +152,7 @@ public class IPUtils {
         if (alt_localaddress == null) {
 
             // Check if an IP address is specified by the user.
-            String tmp = System.getProperties().getProperty(alt_addr);
+            String tmp = props.getProperty(alt_addr);
 
             if (tmp != null) {
                 alt_localaddress = doWorkGetSpecificHostAddress(tmp);
@@ -166,7 +165,7 @@ public class IPUtils {
 
             if (alt_localaddress == null) {
                 // Check if a  network interface is specified by the user.
-                tmp = System.getProperties().getProperty(altNetworkInterface);
+                tmp = props.getProperty(altNetworkInterface);
 
                 if (tmp != null) {
                     alt_localaddress =

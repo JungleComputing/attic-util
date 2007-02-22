@@ -23,10 +23,12 @@ public final class Monitor {
 
     final private static String[] props = { asserts, stats };
 
-    final static boolean ASSERTS = TypedProperties.booleanProperty(asserts);
+    final private static UtilProperties myprops = new UtilProperties(
+            System.getProperties(), PROPERTY_PREFIX, props);
 
-    final static boolean STATISTICS = TypedProperties.booleanProperty(stats,
-            false);
+    final static boolean ASSERTS = myprops.booleanProperty(asserts);
+
+    final static boolean STATISTICS = myprops.booleanProperty(stats);
 
     final boolean PRIORITY;
 
@@ -50,7 +52,6 @@ public final class Monitor {
     private static int unlock_bcast;
 
     static {
-        TypedProperties.checkProperties(PROPERTY_PREFIX, props, null);
         if (ASSERTS) {
             System.err.println("Turn on Monitor.ASSERTS");
         }
