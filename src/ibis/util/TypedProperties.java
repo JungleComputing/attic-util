@@ -27,6 +27,17 @@ public class TypedProperties extends Properties {
     public TypedProperties(Properties defaults) {
         super(defaults);
     }
+    
+    public void addProperties(Properties properties) {
+        if (properties == null) {
+            return;
+        }
+        for (Enumeration e = properties.propertyNames(); e.hasMoreElements();) {
+            String key = (String) e.nextElement();
+            String value = properties.getProperty(key);
+            setProperty(key, value);
+        }
+    }
 
     /**
      * Returns true if property <code>name</code> is defined and has a value
