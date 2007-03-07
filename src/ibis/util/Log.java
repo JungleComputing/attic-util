@@ -20,11 +20,18 @@ public class Log {
             return;
         }
 
-        String[] path = logger.getName().split(".");
+        String[] path = logger.getName().split("\\.");
 
-        String currentPath = "";
+        //System.err.println("path.length = " + path.length);
+        
         for (int i = 0; i < path.length; i++) {
-            currentPath += path[i];
+            String currentPath = path[0];
+            for (int j = 1; j <= i;j++) {
+                currentPath = currentPath + "." + path[j];
+            }
+            
+            
+            //System.err.println("checking: " + currentPath);
 
             Logger currentLogger = Logger.getLogger(currentPath);
 
@@ -40,5 +47,6 @@ public class Log {
         WriterAppender appender = new WriterAppender(layout, System.err);
         logger.addAppender(appender);
         logger.setLevel(Level.WARN);
+        //logger.warn("Added appender to: " + logger.getName());
     }
 }
