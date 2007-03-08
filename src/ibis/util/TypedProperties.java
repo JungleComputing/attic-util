@@ -28,6 +28,10 @@ public class TypedProperties extends Properties {
         super(defaults);
     }
     
+    /**
+     * Adds the specified properties to the current ones.
+     * @param properties the properties to add.
+     */
     public void addProperties(Properties properties) {
         if (properties == null) {
             return;
