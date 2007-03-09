@@ -8,8 +8,10 @@ import org.apache.log4j.WriterAppender;
 
 /**
  * Utility to obtain a log4j logger even when there is no configuration file.
+ * Deprecated, replaced with ibis.util.Log
  */
 
+@Deprecated
 public class GetLogger {
 
     /** Layout for default. */

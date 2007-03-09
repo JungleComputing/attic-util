@@ -4,8 +4,6 @@ package ibis.util;
 
 import java.io.PrintStream;
 import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -41,6 +39,10 @@ public class TypedProperties extends Properties {
             String value = properties.getProperty(key);
             setProperty(key, value);
         }
+    }
+    
+    public void putAll(Properties properties) {
+        addProperties(properties);
     }
 
     /**
@@ -531,4 +533,25 @@ public class TypedProperties extends Properties {
 
         return result;
     }    
+    
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof TypedProperties)) {
+            return false;
+        }
+
+        TypedProperties other = (TypedProperties) object;
+
+        for (Enumeration e = propertyNames(); e.hasMoreElements();) {
+            String key = (String) e.nextElement();
+            String value = getProperty(key);
+
+            String otherValue = other.getProperty(key);
+
+            if (otherValue == null || !otherValue.equals(value)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
