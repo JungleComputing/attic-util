@@ -14,12 +14,37 @@ public class Log {
     /**
      * Checks for the presence of appenders for the specified name
      * (or appenders higher up in the logger hierarchy). If none is
-     * found, a default one is installed for the specified name.
+     * found, a default one is installed for the specified name, with
+     * the level set to WARN
      * @param name the logger name.
      */
     public static synchronized void initLog4J(String name) {
-        initLog4J(Logger.getLogger(name));
+        initLog4J(Logger.getLogger(name), Level.WARN);
     }
+    
+    /**
+     * Checks for the presence of appenders for the specified name
+     * (or appenders higher up in the logger hierarchy). If none is
+     * found, a default one is installed for the specified name, with
+     * the specified level
+     * @param name the logger name.
+     * @param level the level of the new logger
+     */
+    public static synchronized void initLog4J(String name, Level level) {
+        initLog4J(Logger.getLogger(name), level);
+    }
+    
+    /**
+     * Checks for the presence of appenders for the specified logger
+     * (or appenders higher up in the logger hierarchy). If none is
+     * found, a default one is installed for the specified logger, with
+     * the level set to WARN
+     * @param logger the specified logger.
+     */
+    public static synchronized void initLog4J(Logger logger) {
+        initLog4J(logger, Level.WARN);
+    }
+
 
     /**
      * Checks for the presence of appenders for the specified logger
@@ -27,7 +52,7 @@ public class Log {
      * found, a default one is installed for the specified logger.
      * @param logger the specified logger.
      */
-    public static synchronized void initLog4J(Logger logger) {
+    public static synchronized void initLog4J(Logger logger, Level level) {
 
         Logger rootLogger = Logger.getRootLogger();
 
@@ -60,7 +85,7 @@ public class Log {
         PatternLayout layout = new PatternLayout("%d{HH:mm:ss} %-5p %m%n");
         WriterAppender appender = new WriterAppender(layout, System.err);
         logger.addAppender(appender);
-        logger.setLevel(Level.WARN);
+        logger.setLevel(level);
         //logger.warn("Added appender to: " + logger.getName());
     }
 }
