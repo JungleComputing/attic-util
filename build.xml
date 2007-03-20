@@ -58,7 +58,7 @@
 	</target>
 	
 	<target name="clean" description="clean up">
-		<delete file="${jar}" />
+		<delete dir="${lib}" />
 	</target>
 
 	<target name="distclean" depends="clean" description="clean up, including docs">
