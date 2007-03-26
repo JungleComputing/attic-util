@@ -2,14 +2,15 @@
 
 package ibis.util;
 
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Enumeration;
-
-import smartsockets.util.NetworkUtils;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -218,6 +219,113 @@ public class IPUtils {
         return true;
     }
 
+    /**
+     * Adds all the network interfaces found on this machine to the list.
+     */    
+    private static ArrayList<NetworkInterface> getNetworkInterfacesList() { 
+        
+        ArrayList<NetworkInterface> list = new ArrayList<NetworkInterface>();        
+        Enumeration<NetworkInterface> e = null;
+
+        try {
+            e = NetworkInterface.getNetworkInterfaces();                       
+
+            while (e.hasMoreElements()) {                   
+                list.add(e.nextElement());
+            }        
+        } catch (SocketException ex) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Could not get network interfaces.");
+            }
+        }
+        
+        return list;
+    }
+    
+    /**
+     * Returns all the network interfaces found on this machine.
+     * 
+     * @return the network interfaces.
+     */
+    public static NetworkInterface [] getNetworkInterfaces() { 
+        ArrayList<NetworkInterface> list = getNetworkInterfacesList();       
+        
+        return list.toArray(new NetworkInterface[list.size()]);
+    }
+    
+    /**
+     * Adds all IP addresses that are bound to a specific network interface to 
+     * a list. If desired, loopback and/or IPv6 addresses can be ignored.  
+     * 
+     * @param nw the network interface for which the addresses are determined
+     * @param target the list used to store the addresses
+     * @param ignoreLoopback ignore loopback addresses 
+     * @param ignoreIP6 ignore IPv6 addresses
+     */
+    private static void getAllHostAddresses(NetworkInterface nw, 
+            List<InetAddress> target, boolean ignoreLoopback, boolean ignoreIP6) { 
+                
+        if (logger.isInfoEnabled()) {
+            logger.info("   " + nw.getDisplayName() + ":");
+        }
+                        
+        Enumeration<InetAddress> e2 = nw.getInetAddresses();
+            
+        while (e2.hasMoreElements()) {
+            
+            InetAddress tmp = e2.nextElement();
+                       
+            boolean t1 = !ignoreLoopback || !tmp.isLoopbackAddress();
+            boolean t2 = !ignoreIP6 || (tmp instanceof Inet4Address); 
+            
+            if (t1 && t2) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("    - " + tmp.getHostAddress() + " (used)");
+                }
+                target.add(tmp);
+            } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("    - " + tmp.getHostAddress() + " (ignored)");
+                }
+            }
+        }
+    }
+            
+    /**
+     * Returns all IP addresses that could be found on this machine.
+     * 
+     * @return all IP addresses found.
+     */
+    public static InetAddress [] getAllHostAddresses() {
+        return getAllHostAddresses(false, false);
+    }
+
+    /**
+     * Returns all IP addresses that could be found on this machine. 
+     * If desired, loopback and/or IPv6 addresses can be ignored.  
+     * 
+     * @param ignoreLoopback ignore loopback addresses 
+     * @param ignoreIP6 ignore IPv6 addresses
+     * 
+     * @return all IP addresses found that adhere to the restrictions.
+     */
+    public static InetAddress [] getAllHostAddresses(boolean ignoreLoopback, 
+            boolean ignoreIP6) { 
+
+        ArrayList<NetworkInterface> nwl = getNetworkInterfacesList();
+        ArrayList<InetAddress> list = new ArrayList<InetAddress>();
+            
+        if (logger.isInfoEnabled()) {
+            logger.info("Determining available addresses:");
+        }
+        
+        for (NetworkInterface nwi : nwl) { 
+            getAllHostAddresses(nwi, list, ignoreLoopback, ignoreIP6);
+        } 
+        
+        return list.toArray(new InetAddress[list.size()]);
+    }
+    
     private static InetAddress doWorkGetSpecificHostAddress(String ha) {
 
         InetAddress address = null;
@@ -240,7 +348,7 @@ public class IPUtils {
             subnet = addressToBytes(ha.substring(0, index));
             netmask = addressToBytes(ha.substring(index + 1));
 
-            InetAddress[] all = NetworkUtils.getAllHostAddresses();
+            InetAddress[] all = getAllHostAddresses();
 
             if (all != null) {
                 for (int i = 0; i < all.length; i++) {
@@ -420,7 +528,7 @@ public class IPUtils {
 
         InetAddress external = null;
 
-        InetAddress[] all = NetworkUtils.getAllHostAddresses();
+        InetAddress[] all = getAllHostAddresses();
         
         if (all != null) {
             for (int i = 0; i < all.length; i++) {
@@ -466,9 +574,11 @@ public class IPUtils {
      */
     public static String getLocalHostName() {
         try {
-            return NetworkUtils.getHostname();
-        } catch(java.io.IOException e) {
-            logger.info("IOException in NetworkUtils.getHostname()", e);
+            InetAddress a = InetAddress.getLocalHost();
+            if (a != null) {
+                return a.getHostName();
+            }
+        } catch(IOException e) {
             // ignored
         }
         return getLocalHostAddress().getHostName();
