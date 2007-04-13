@@ -8,6 +8,11 @@ package ibis.util;
  */
 public class NanoTimer extends Timer {
     /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    /**
      * Returns implementation name of this timer ("e.g., "javaTimer").
      * 
      * @return the implementation name.

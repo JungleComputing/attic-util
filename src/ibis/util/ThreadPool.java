@@ -14,7 +14,12 @@ import org.apache.log4j.Logger;
  */
 public final class ThreadPool {
 
-    static final Logger logger = GetLogger.getLogger(ThreadPool.class);
+    static final Logger logger;
+    
+    static {
+        Log.initLog4J("ibis.util");
+        logger = Logger.getLogger(ThreadPool.class);
+    }
     
     private static final class PoolThread extends Thread {
 
@@ -24,7 +29,7 @@ public final class ThreadPool {
 
         private static final class ThreadPoolShutdown extends Thread {
             public void run() {
-                Logger logger = GetLogger.getLogger(ThreadPool.class);
+                Logger logger = Logger.getLogger(ThreadPool.class);
                 logger.info("maximum number of simultaneous threads was: " + maxSimultaneousThreads);
             }
         }

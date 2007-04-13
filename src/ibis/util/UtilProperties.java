@@ -4,6 +4,8 @@ import java.util.Properties;
 
 public class UtilProperties extends TypedProperties {
 
+    private static final long serialVersionUID = 1L;
+
     private static String[] prefs = { "ibis.util.ip.", "ibis.util.monitor.",
             "ibis.util.socketfactory." };
  

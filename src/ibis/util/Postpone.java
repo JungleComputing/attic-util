@@ -2,11 +2,11 @@
 
 package ibis.util;
 
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 
 /**
  * A class that allows you to postpone starting a program for a specified

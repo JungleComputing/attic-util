@@ -10,6 +10,11 @@ package ibis.util;
 public class IllegalLockStateException extends RuntimeException {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    /**
      * Constructs a <code>AlreadyConnectedException</code> with
      * <code>null</code> as its error detail message.
      */

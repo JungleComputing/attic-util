@@ -2,17 +2,16 @@
 
 package ibis.util;
 
-import java.io.DataOutputStream;
-import java.io.BufferedOutputStream;
-import java.io.ObjectInputStream;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
+import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
 import smartsockets.direct.IPAddressSet;
-import smartsockets.util.NetworkUtils;
 
 /**
  * The <code>PoolInfoClient</code> class provides a utility for finding out

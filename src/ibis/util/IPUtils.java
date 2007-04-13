@@ -40,9 +40,13 @@ public class IPUtils {
 
     private static InetAddress detected = null;
 
-    static Logger logger =
-            ibis.util.GetLogger.getLogger(IPUtils.class.getName());
-
+    static Logger logger;
+    
+    static {
+        Log.initLog4J("ibis.util");
+        logger = Logger.getLogger(IPUtils.class.getName());
+    }
+    
     private IPUtils() {
         /* do nothing */
     }

@@ -9,6 +9,11 @@ import java.lang.reflect.Method;
  */
 public class Timer implements java.io.Serializable {
     /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    /**
      * Counts the number of start/stop sequences.
      */
     protected int count;

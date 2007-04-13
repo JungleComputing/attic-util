@@ -2,11 +2,11 @@
 
 package ibis.util;
 
-import java.io.DataInputStream;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.BufferedOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -41,8 +41,13 @@ public class PoolInfoServer extends Thread {
      */
     public static final int POOL_INFO_PORT = 9827;
 
-    static Logger logger = ibis.util.GetLogger.getLogger(PoolInfoServer.class.getName());
-
+    static Logger logger;
+    
+    static {
+        Log.initLog4J("ibis.util");
+        logger = Logger.getLogger(PoolInfoServer.class.getName());
+    }
+    
     static class RunInfo {
         int total_hosts;
 
