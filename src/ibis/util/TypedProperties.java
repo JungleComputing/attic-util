@@ -2,6 +2,11 @@
 
 package ibis.util;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Enumeration;
 import java.util.Properties;
@@ -20,15 +25,19 @@ public class TypedProperties extends Properties {
 
     /**
      * Constructs a typed properties object with the specified defaults.
-     * @param defaults the defaults.
+     * 
+     * @param defaults
+     *            the defaults.
      */
     public TypedProperties(Properties defaults) {
         super(defaults);
     }
-    
+
     /**
      * Adds the specified properties to the current ones.
-     * @param properties the properties to add.
+     * 
+     * @param properties
+     *            the properties to add.
      */
     public void addProperties(Properties properties) {
         if (properties == null) {
@@ -40,9 +49,67 @@ public class TypedProperties extends Properties {
             setProperty(key, value);
         }
     }
-    
+
     public void putAll(Properties properties) {
         addProperties(properties);
+    }
+
+    /**
+     * Tries to load properties from a file. Does not throw any exceptions if
+     * unsuccesfull
+     */
+    public void loadFromFile(String file) {
+        if (file == null) {
+            return;
+        }
+
+        try {
+            FileInputStream inputStream = new FileInputStream(file);
+
+            try {
+                load(inputStream);
+            } catch (IOException e) {
+                // IGNORE
+            }
+
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                // IGNORE
+            }
+
+        } catch (FileNotFoundException e) {
+            // IGNORE
+        }
+    }
+
+    /**
+     * Loads properties from one or more files. Searches for files with the
+     * given name in the classpath, the user's home and the current working
+     * directory (in that order)
+     */
+    public void loadConfigFiles(String fileName) {
+        // get file from classpath
+        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+        InputStream inputStream = classLoader.getResourceAsStream(fileName);
+
+        try {
+            load(inputStream);
+        } catch (IOException e) {
+            // IGNORE
+        }
+        try {
+            inputStream.close();
+        } catch (IOException e) {
+            // IGNORE
+        }
+
+        //get file from user's home
+        loadFromFile(System.getProperty("user.home") + File.separator
+                + fileName);
+        
+        //get file from current working directory
+        loadFromFile(fileName);
     }
 
     /**
@@ -75,7 +142,7 @@ public class TypedProperties extends Properties {
 
         if (value != null) {
             return value.equals("1") || value.equals("on") || value.equals("")
-                || value.equals("true") || value.equals("yes");
+                    || value.equals("true") || value.equals("yes");
         }
 
         return defaultValue;
@@ -101,7 +168,7 @@ public class TypedProperties extends Properties {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             throw new NumberFormatException("Integer expected for property "
-                + key + ", not \"" + value + "\"");
+                    + key + ", not \"" + value + "\"");
         }
     }
 
@@ -127,7 +194,7 @@ public class TypedProperties extends Properties {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             throw new NumberFormatException("Integer expected for property "
-                + key + ", not \"" + value + "\"");
+                    + key + ", not \"" + value + "\"");
         }
     }
 
@@ -151,7 +218,7 @@ public class TypedProperties extends Properties {
             return Long.parseLong(value);
         } catch (NumberFormatException e) {
             throw new NumberFormatException("Long expected for property " + key
-                + ", not \"" + value + "\"");
+                    + ", not \"" + value + "\"");
         }
     }
 
@@ -177,7 +244,7 @@ public class TypedProperties extends Properties {
             return Long.parseLong(value);
         } catch (NumberFormatException e) {
             throw new NumberFormatException("Long expected for property " + key
-                + ", not \"" + value + "\"");
+                    + ", not \"" + value + "\"");
         }
     }
 
@@ -201,7 +268,7 @@ public class TypedProperties extends Properties {
             return Short.parseShort(value);
         } catch (NumberFormatException e) {
             throw new NumberFormatException("Short expected for property "
-                + key + ", not \"" + value + "\"");
+                    + key + ", not \"" + value + "\"");
         }
     }
 
@@ -227,15 +294,15 @@ public class TypedProperties extends Properties {
             return Short.parseShort(value);
         } catch (NumberFormatException e) {
             throw new NumberFormatException("Short expected for property "
-                + key + ", not \"" + value + "\"");
+                    + key + ", not \"" + value + "\"");
         }
     }
 
     /**
      * Returns the long value of a size property. Valid values for the property
-     * are a long, a long followed by K, a long followed by M or a long
-     * followed by G. Size modifiers multiply the value by 1024, 1024^2
-     * and 1024^3 respectively.
+     * are a long, a long followed by K, a long followed by M or a long followed
+     * by G. Size modifiers multiply the value by 1024, 1024^2 and 1024^3
+     * respectively.
      * 
      * @return the size value of property
      * @param key
@@ -255,10 +322,9 @@ public class TypedProperties extends Properties {
 
     /**
      * Returns the long value of a size property. Valid values for the property
-     * are a long, a long followed by K, a long followed by M or a long
-     * followed by G. Size modifiers multiply the value by 1024, 1024^2
-     * and 1024^3 respectively. Returns the default value if the property is
-     * undefined.
+     * are a long, a long followed by K, a long followed by M or a long followed
+     * by G. Size modifiers multiply the value by 1024, 1024^2 and 1024^3
+     * respectively. Returns the default value if the property is undefined.
      * 
      * @return the size value of property
      * @param key
@@ -278,52 +344,50 @@ public class TypedProperties extends Properties {
         try {
 
             if (value.endsWith("G") || value.endsWith("g")) {
-                return Long.parseLong(value.substring(0, value.length() - 1))
-                    * 1024 * 1024 * 1024;
+                return Long.parseLong(value.substring(0, value.length() - 1)) * 1024 * 1024 * 1024;
             }
 
             if (value.endsWith("M") || value.endsWith("m")) {
-                return Long.parseLong(value.substring(0, value.length() - 1))
-                    * 1024 * 1024;
+                return Long.parseLong(value.substring(0, value.length() - 1)) * 1024 * 1024;
             }
 
             if (value.endsWith("K") || value.endsWith("k")) {
-                return Long.parseLong(value.substring(0, value.length() - 1))
-                    * 1024;
+                return Long.parseLong(value.substring(0, value.length() - 1)) * 1024;
             }
 
             return Long.parseLong(value);
 
         } catch (NumberFormatException e) {
             throw new NumberFormatException(
-                "Long[G|g|M|m|K|k] expected for property " + key + ", not \""
-                    + value + "\"");
+                    "Long[G|g|M|m|K|k] expected for property " + key
+                            + ", not \"" + value + "\"");
         }
     }
 
     /**
-     * Returns the split-up value of a string property.
-     * The value is supposed to be a comma-separated string.
-     * See {@link java.lang.String#split(String)} for details of the
-     * splitting.
-     * If the property is not defined, an empty array of strings is
-     * returned.
-     * @param key the property name
+     * Returns the split-up value of a string property. The value is supposed to
+     * be a comma-separated string. See {@link java.lang.String#split(String)}
+     * for details of the splitting. If the property is not defined, an empty
+     * array of strings is returned.
+     * 
+     * @param key
+     *            the property name
      * @return the split-up property value.
      */
     public String[] getStringList(String key) {
         return getStringList(key, ",", new String[0]);
     }
-   
+
     /**
-     * Returns the split-up value of a string property.
-     * The value is split up according to the specified delimiter.
-     * See {@link java.lang.String#split(String)} for details of the
-     * splitting.
-     * If the property is not defined, an empty array of strings is
-     * returned.
-     * @param key the property name
-     * @param delim the delimiter
+     * Returns the split-up value of a string property. The value is split up
+     * according to the specified delimiter. See
+     * {@link java.lang.String#split(String)} for details of the splitting. If
+     * the property is not defined, an empty array of strings is returned.
+     * 
+     * @param key
+     *            the property name
+     * @param delim
+     *            the delimiter
      * @return the split-up property value.
      */
     public String[] getStringList(String key, String delim) {
@@ -331,18 +395,21 @@ public class TypedProperties extends Properties {
     }
 
     /**
-     * Returns the split-up value of a string property.
-     * The value is split up according to the specified delimiter.
-     * See {@link java.lang.String#split(String)} for details of the
-     * splitting.
-     * If the property is not defined, the specified default value is returned.
-     * @param key the property name
-     * @param delim the delimiter
-     * @param defaultValue the default value
+     * Returns the split-up value of a string property. The value is split up
+     * according to the specified delimiter. See
+     * {@link java.lang.String#split(String)} for details of the splitting. If
+     * the property is not defined, the specified default value is returned.
+     * 
+     * @param key
+     *            the property name
+     * @param delim
+     *            the delimiter
+     * @param defaultValue
+     *            the default value
      * @return the split-up property value.
      */
     public String[] getStringList(String key, String delim,
-            String [] defaultValue) {
+            String[] defaultValue) {
         String value = getProperty(key);
 
         if (value == null) {
@@ -351,8 +418,7 @@ public class TypedProperties extends Properties {
 
         return value.split(delim);
     }
-    
-    
+
     /**
      * Returns true if property name is defined and has a string value that
      * equals match.
@@ -370,8 +436,11 @@ public class TypedProperties extends Properties {
 
     /**
      * Returns true if the given element is a member of the given list.
-     * @param list the given list.
-     * @param element the given element.
+     * 
+     * @param list
+     *            the given list.
+     * @param element
+     *            the given element.
      * @return true if the given element is a member of the given list.
      */
     private static boolean contains(String[] list, String element) {
@@ -388,8 +457,11 @@ public class TypedProperties extends Properties {
 
     /**
      * Returns true if the given string starts with one of the given prefixes.
-     * @param string the given string.
-     * @param prefixes the given prefixes.
+     * 
+     * @param string
+     *            the given string.
+     * @param prefixes
+     *            the given prefixes.
      * @return true if the given string starts with one of the given prefixes.
      */
     private static boolean startsWith(String string, String[] prefixes) {
@@ -413,14 +485,14 @@ public class TypedProperties extends Properties {
      * @param validKeys
      *            the set of valid keys (all with the prefix).
      * @param validSubPrefixes
-     *            if a propery starts with one of these prefixes, it is
-     *            declared valid
+     *            if a propery starts with one of these prefixes, it is declared
+     *            valid
      * @param printWarning
      *            if true, a warning is printed to standard error for each
      *            unknown property
      */
     public TypedProperties checkProperties(String prefix, String[] validKeys,
-        String[] validPrefixes, boolean printWarning) {
+            String[] validPrefixes, boolean printWarning) {
         TypedProperties result = new TypedProperties();
 
         if (prefix == null) {
@@ -429,16 +501,16 @@ public class TypedProperties extends Properties {
 
         for (Enumeration e = propertyNames(); e.hasMoreElements();) {
             String key = (String) e.nextElement();
-            
+
             if (key.startsWith(prefix)) {
                 String suffix = key.substring(prefix.length());
                 String value = getProperty(key);
-               
+
                 if (!startsWith(suffix, validPrefixes)
                         && !contains(validKeys, key)) {
                     if (printWarning) {
                         System.err.println("Warning, unknown property: " + key
-                            + " with value: " + value);
+                                + " with value: " + value);
                     }
                     result.put(key, value);
                 }
@@ -450,15 +522,18 @@ public class TypedProperties extends Properties {
     /**
      * Returns all properties who's key start with a certain prefix.
      * 
-     * @return a Property object containing all matching properties. 
-     * @param prefix the desired prefix
-     * @param removePrefix should the prefix be removed from the property name?
-     * @param removeProperties should the returned properties be removed from
-     * the current properties?
+     * @return a Property object containing all matching properties.
+     * @param prefix
+     *            the desired prefix
+     * @param removePrefix
+     *            should the prefix be removed from the property name?
+     * @param removeProperties
+     *            should the returned properties be removed from the current
+     *            properties?
      */
-    public TypedProperties filter(String prefix, boolean removePrefix, 
+    public TypedProperties filter(String prefix, boolean removePrefix,
             boolean removeProperties) {
-        
+
         TypedProperties result = new TypedProperties();
 
         if (prefix == null) {
@@ -467,20 +542,20 @@ public class TypedProperties extends Properties {
 
         for (Enumeration e = propertyNames(); e.hasMoreElements();) {
             String key = (String) e.nextElement();
-            
+
             if (key.startsWith(prefix)) {
-            
+
                 String value = getProperty(key);
-               
+
                 if (removePrefix) {
-                    result.put(key.substring(prefix.length()),  value);
-                } else {                 
+                    result.put(key.substring(prefix.length()), value);
+                } else {
                     result.put(key, value);
                 }
-                
-                if (removeProperties) { 
+
+                if (removeProperties) {
                     remove(key);
-                }                
+                }
             }
         }
 
@@ -490,8 +565,9 @@ public class TypedProperties extends Properties {
     /**
      * Returns all properties who's key start with a certain prefix.
      * 
-     * @return a Property object containing all matching properties. 
-     * @param prefix the desired prefix
+     * @return a Property object containing all matching properties.
+     * @param prefix
+     *            the desired prefix
      */
     public TypedProperties filter(String prefix) {
         return filter(prefix, false, false);
@@ -532,8 +608,8 @@ public class TypedProperties extends Properties {
         }
 
         return result;
-    }    
-    
+    }
+
     @Override
     public boolean equals(Object object) {
         if (!(object instanceof TypedProperties)) {
