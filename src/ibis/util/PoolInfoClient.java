@@ -95,7 +95,7 @@ public class PoolInfoClient extends PoolInfo {
         TypedProperties props = new TypedProperties(prop);
 
         total_hosts = props.getIntProperty(s_total);
-        int remove_doubles = props.booleanProperty(s_single) ? 1 : 0;
+        int remove_doubles = props.getBooleanProperty(s_single) ? 1 : 0;
 
         int serverPort = props.getIntProperty(s_port, -1);
         if (serverPort == -1) {

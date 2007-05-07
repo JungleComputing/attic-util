@@ -26,9 +26,9 @@ public final class Monitor {
     final private static UtilProperties myprops = new UtilProperties(
             System.getProperties(), PROPERTY_PREFIX, props);
 
-    final static boolean ASSERTS = myprops.booleanProperty(asserts);
+    final static boolean ASSERTS = myprops.getBooleanProperty(asserts);
 
-    final static boolean STATISTICS = myprops.booleanProperty(stats);
+    final static boolean STATISTICS = myprops.getBooleanProperty(stats);
 
     final boolean PRIORITY;
 

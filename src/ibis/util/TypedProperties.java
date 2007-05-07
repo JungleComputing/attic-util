@@ -18,6 +18,11 @@ public class TypedProperties extends Properties {
 
     private static final long serialVersionUID = 1L;
 
+    public static final String DEFAULT_CONFIG_FILE = "ibis.properties";
+
+    public static final String DEFAULT_CONFIG_FILE_PROPERTY = "ibis.properties.file";
+
+   
     /** Constructs an empty typed properties object. */
     public TypedProperties() {
         super();
@@ -55,6 +60,28 @@ public class TypedProperties extends Properties {
     }
 
     /**
+     * Tries to load properties from a properties file on the classpath
+     */
+    public void loadFromClassPath(String resourceName) {
+        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+        InputStream inputStream = classLoader.getResourceAsStream(resourceName);
+
+        if (inputStream != null) {
+            try {
+                load(inputStream);
+            } catch (Exception e) {
+                // IGNORE
+            } finally {
+                try {
+                    inputStream.close();
+                } catch (Exception e2) {
+                    // IGNORE
+                }
+            }
+        }
+    }
+
+    /**
      * Tries to load properties from a file. Does not throw any exceptions if
      * unsuccesfull
      */
@@ -65,7 +92,7 @@ public class TypedProperties extends Properties {
 
         try {
             FileInputStream inputStream = new FileInputStream(file);
-            
+
             try {
                 load(inputStream);
             } catch (IOException e) {
@@ -83,41 +110,29 @@ public class TypedProperties extends Properties {
         }
     }
 
-    /**
-     * Loads properties from one or more places (mostly files). 
-     * Searches for files with the given name in the classpath, the user's 
-     * home, the current working directory and a file specified by the given 
-     * system property (in that order). Also adds the system properties.
-     */
-    public void loadConfig(String fileName, String propertyName) {
-        // get file from classpath
-        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-        InputStream inputStream = classLoader.getResourceAsStream(fileName);
-
-        if (inputStream != null) {
-            try {
-                load(inputStream);
-            } catch (IOException e) {
-                // IGNORE
-            }
-            try {
-                inputStream.close();
-            } catch (IOException e) {
-                // IGNORE
-            }
-        }
-
-        // get file from user's home
+    public void loadFromHomeFile(String fileName) {
         loadFromFile(System.getProperty("user.home") + File.separator
                 + fileName);
-
-        // get file from current working directory
-        loadFromFile(fileName);
-
-        loadFromFile(System.getProperty(propertyName));
-        
+    }
+    
+    /**
+     * Loads configuration options from the default configuration 
+     * locations for the Ibis project.
+     * The following location are added (in order):
+     * <ol>
+     * <li>A file "ibis.properties" in the classpath</li>
+     * <li>A file "ibis.properties" in the current working directory</li>
+     * <li>A file, speficied by the "ibis.properties.file" system property</li>
+     * <li>The System properties</li>
+     * </ol>
+     */
+    public void loadDefaultConfigProperties() {
+        loadFromClassPath(DEFAULT_CONFIG_FILE);
+        loadFromFile(DEFAULT_CONFIG_FILE);
+        loadFromFile(System.getProperty(DEFAULT_CONFIG_FILE_PROPERTY));
         addProperties(System.getProperties());
     }
+
 
     /**
      * Returns true if property <code>name</code> is defined and has a value
@@ -128,8 +143,8 @@ public class TypedProperties extends Properties {
      * @param name
      *            property name
      */
-    public boolean booleanProperty(String name) {
-        return booleanProperty(name, false);
+    public boolean getBooleanProperty(String name) {
+        return getBooleanProperty(name, false);
     }
 
     /**
@@ -144,7 +159,7 @@ public class TypedProperties extends Properties {
      * @param defaultValue
      *            the value that is returned if the property is absent
      */
-    public boolean booleanProperty(String key, boolean defaultValue) {
+    public boolean getBooleanProperty(String key, boolean defaultValue) {
         String value = getProperty(key);
 
         if (value != null) {
