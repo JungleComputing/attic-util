@@ -65,7 +65,7 @@ public class TypedProperties extends Properties {
 
         try {
             FileInputStream inputStream = new FileInputStream(file);
-
+            
             try {
                 load(inputStream);
             } catch (IOException e) {
@@ -84,32 +84,39 @@ public class TypedProperties extends Properties {
     }
 
     /**
-     * Loads properties from one or more files. Searches for files with the
-     * given name in the classpath, the user's home and the current working
-     * directory (in that order)
+     * Loads properties from one or more places (mostly files). 
+     * Searches for files with the given name in the classpath, the user's 
+     * home, the current working directory and a file specified by the given 
+     * system property (in that order). Also adds the system properties.
      */
-    public void loadConfigFiles(String fileName) {
+    public void loadConfig(String fileName, String propertyName) {
         // get file from classpath
         ClassLoader classLoader = ClassLoader.getSystemClassLoader();
         InputStream inputStream = classLoader.getResourceAsStream(fileName);
 
-        try {
-            load(inputStream);
-        } catch (IOException e) {
-            // IGNORE
-        }
-        try {
-            inputStream.close();
-        } catch (IOException e) {
-            // IGNORE
+        if (inputStream != null) {
+            try {
+                load(inputStream);
+            } catch (IOException e) {
+                // IGNORE
+            }
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                // IGNORE
+            }
         }
 
-        //get file from user's home
+        // get file from user's home
         loadFromFile(System.getProperty("user.home") + File.separator
                 + fileName);
-        
-        //get file from current working directory
+
+        // get file from current working directory
         loadFromFile(fileName);
+
+        loadFromFile(System.getProperty(propertyName));
+        
+        addProperties(System.getProperties());
     }
 
     /**
