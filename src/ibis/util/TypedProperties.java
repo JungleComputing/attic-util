@@ -22,6 +22,13 @@ public class TypedProperties extends Properties {
 
     public static final String DEFAULT_CONFIG_FILE_PROPERTY = "ibis.properties.file";
 
+    public static TypedProperties getDefaultConfigProperties() {
+        TypedProperties result = new TypedProperties();
+        result.loadDefaultConfigProperties();
+        
+        return result;
+    }
+    
    
     /** Constructs an empty typed properties object. */
     public TypedProperties() {
