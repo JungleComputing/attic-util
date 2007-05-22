@@ -46,17 +46,17 @@ public final class ThreadPool {
 
         private static int maxSimultaneousThreads = 0;
         
-        private static synchronized void newThread() {
+        private static synchronized void newThread(String name) {
             nrOfThreads++;
             if(nrOfThreads > maxSimultaneousThreads) {
                 maxSimultaneousThreads = nrOfThreads;
             }
-            logger.debug("new thread. Threadcount: " + nrOfThreads);
+            logger.debug("New Thread \"" + name + "\" createded, number of threads now: "  + nrOfThreads);
         }
 
         private static synchronized void threadGone() {
             nrOfThreads--;
-            logger.debug("thread gone. Threadcount: " + nrOfThreads);
+            logger.debug("Thread removed from pool. Now " + nrOfThreads + " threads");
         }
 
         private PoolThread() {
@@ -68,7 +68,7 @@ public final class ThreadPool {
             this.name = name;
 
              if (logger.isInfoEnabled()) {
-                 newThread();
+                 newThread(name);
              }
         }
 
