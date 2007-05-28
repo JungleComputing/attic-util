@@ -2,589 +2,239 @@
 
 package ibis.util;
 
-import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
 /**
- * Some utilities that deal with IP addresses.
+ * Some utilities that deal with IP addresses. Shamelessly copied from
+ * smartsockets.direct.IPAddressSet et al.
  */
 public class IPUtils {
-    private static final String prefix = "ibis.util.ip.";
-
-    private static final String addr = prefix + "address";
-
-    private static final String alt_addr = prefix + "alt-address";
-
-    private static final String networkInterface = prefix + "interface";
-
-    private static final String altNetworkInterface = prefix + "alt-interface";
-
-    private static final String[] sysprops =
-            { addr, alt_addr, networkInterface, altNetworkInterface };
-
-    private static final UtilProperties props = new UtilProperties(
-            System.getProperties(), prefix, sysprops);
-
-    private static InetAddress localaddress = null;
-
-    private static InetAddress alt_localaddress = null;
-
-    private static InetAddress detected = null;
-
-    static Logger logger;
-    
-    static {
-        Log.initLog4J("ibis.util");
-        logger = Logger.getLogger(IPUtils.class.getName());
-    }
-    
-    private IPUtils() {
-        /* do nothing */
-    }
 
     /**
-     * Returns true if the specified address is an external address.
-     * External means not a site local, link local, or loopback address.
-     * @param address the specified address.
-     * @return <code>true</code> if <code>addr</code> is an external address.
+     * Inner class capable of sorting addresses
      */
-    public static boolean isExternalAddress(InetAddress address) {
-        if (address.isLoopbackAddress()) {
-            return false;
-        }
-        if (address.isLinkLocalAddress()) {
-            return false;
-        }
-        if (address.isSiteLocalAddress()) {
-            return false;
-        }
+    private static class AddressSorter implements Comparator<InetAddress> {
 
-        return true;
-    }
+        /**
+         * Orders two addresses based on their length. If both addresses have
+         * the same length, the addresses are ordered based on comparing their
+         * raw bytes values.
+         * 
+         * @param i1
+         *            an InetAddress
+         * @param i2
+         *            an InetAddress
+         * @return int value indicating the order of the addresses
+         */
+        private int compareAddress(InetAddress i1, InetAddress i2) {
 
-    /**
-     * Returns the {@link java.net.InetAddress} associated with the local host.
-     *  
-     * If the ibis.util.ip.address property is specified and set to a specific 
-     * IP address (e.g., "192.168.1.150"), that address is tried first. 
-     * 
-     * If the ibis.util.ip.address property is specified and set to a subnet and 
-     * netmask (e.g., "192.168.0.0/255.255.0.0"), getLocalHostAddress will try 
-     * to find a matching address. 
-     * 
-     * If the ibis.util.ip.interface property is set (e.g., "eth1") 
-     * getLocalHostAddress will try to find an address bound to that network 
-     * interface. 
-     * 
-     * If no properties are set or the above lookups fail, getLocalHostAddress 
-     * will try to find a (preferrably external) IP address on any available 
-     * network interface. 
-     * 
-     * @return the resulting {@link java.net.InetAddress}.
-     */
-    public static InetAddress getLocalHostAddress() {
-        if (localaddress == null) {
+            // We have a preference for the shortest address (i.e., IPv4)
+            byte[] tmp1 = i1.getAddress();
+            byte[] tmp2 = i2.getAddress();
 
-            // Check if an IP address is specified by the user.
-            String tmp = props.getProperty(addr);
+            if (tmp1.length != tmp2.length) {
+                return tmp2.length - tmp1.length;
+            }
 
-            if (tmp != null) {
-                localaddress = doWorkGetSpecificHostAddress(tmp);
+            for (int i = 0; i < tmp1.length; i++) {
+                if (tmp1[i] != tmp2[i]) {
 
-                if (localaddress == null) {
-                    logger.error("The specified IP address " + tmp
-                        + " could not be found!");
+                    int t1 = tmp1[i] & 0xFF;
+                    int t2 = tmp2[i] & 0xFF;
+                    return t2 - t1;
                 }
             }
 
-            if (localaddress == null) {
-                // Check if a  network interface is specified by the user.
-                tmp = props.getProperty(networkInterface);
-
-                if (tmp != null) {
-                    localaddress = doWorkGetSpecificNetworkInterface(tmp, null);
-
-                    if (localaddress == null) {
-                        logger.error("The specified network interface " + tmp
-                            + " could not be found!");
-                    }
-                }
-            }
-
-            if (localaddress == null) {
-                // Fall back to 'normal' rountine            
-                localaddress = doWorkGetLocalHostAddress();
-            }
-
-            // To make sure that a hostname is filled in:
-            localaddress.getHostName();
-
-            logger.debug("Found address: " + localaddress);
-        }
-        return localaddress;
-    }
-
-    /**
-     * Returns the {@link java.net.InetAddress} associated with the local host.
-     *       
-     * If the ibis.util.ip.alt-address property is specified and set to a 
-     * specific IP address (e.g., "192.168.1.150"), that address is tried first. 
-     * 
-     * If the ibis.util.ip.alt-address property is specified and set to a subnet
-     * and netmask (e.g., "192.168.0.0/255.255.0.0"), 
-     * getAlternateLocalHostAddress will try to find a matching address. 
-     * 
-     * If the ibis.util.ip.alt-interface property is set (e.g., "eth1") 
-     * getAlternateLocalHostAddress will try to find an address bound to that
-     * network interface. 
-     * 
-     * If no properties are set or the above lookups fail, 
-     * getAlternateLocalHostAddress will try to find a (preferrably external) IP
-     * address on any available network interface. 
-     * 
-     * @return the resulting {@link java.net.InetAddress}.
-     */
-    public static InetAddress getAlternateLocalHostAddress() {
-        if (alt_localaddress == null) {
-
-            // Check if an IP address is specified by the user.
-            String tmp = props.getProperty(alt_addr);
-
-            if (tmp != null) {
-                alt_localaddress = doWorkGetSpecificHostAddress(tmp);
-
-                if (alt_localaddress == null) {
-                    logger.error("The specified (alt) IP address " + tmp
-                        + " could not be found!");
-                }
-            }
-
-            if (alt_localaddress == null) {
-                // Check if a  network interface is specified by the user.
-                tmp = props.getProperty(altNetworkInterface);
-
-                if (tmp != null) {
-                    alt_localaddress =
-                            doWorkGetSpecificNetworkInterface(tmp, null);
-
-                    if (alt_localaddress == null) {
-                        logger.error("The specified (alt) network interface "
-                            + tmp + " could not be found!");
-                    }
-                }
-            }
-
-            if (alt_localaddress == null) {
-                alt_localaddress = doWorkGetLocalHostAddress();
-            }
-
-            // To make sure that a hostname is filled in:
-            alt_localaddress.getHostName();
-
-            logger.debug("Found alt address: " + alt_localaddress);
-        }
-        return alt_localaddress;
-    }
-
-    private static byte[] addressToBytes(String address) {
-
-        try {
-            InetAddress tmp = InetAddress.getByName(address);
-            return tmp.getAddress();
-        } catch (UnknownHostException e) {
-            logger.debug("Failed to convert " + address + " to bytes!");
-            return new byte[0];
-        }
-    }
-
-    private static boolean matchAddress(byte[] sub, byte[] mask, byte[] ad) {
-
-        if (sub.length != ad.length) {
-            // Not sure how to mix IPv4 and IPv6 yet ...
-            return false;
+            return 0;
         }
 
-        for (int i = 0; i < sub.length; i++) {
+        /**
+         * Gives the address a score based on the class it belongs to. The more
+         * general the class, the lower the score.
+         * 
+         * @param ina
+         *            the address to score
+         * @return score given to the address
+         */
+        private int score(InetAddress ina) {
 
-            if ((ad[i] & mask[i]) != (sub[i] & mask[i])) {
-                return false;
+            if (ina.isLoopbackAddress()) {
+                return 8;
             }
-        }
 
-        return true;
-    }
-
-    /**
-     * Adds all the network interfaces found on this machine to the list.
-     */    
-    private static ArrayList<NetworkInterface> getNetworkInterfacesList() { 
-        
-        ArrayList<NetworkInterface> list = new ArrayList<NetworkInterface>();        
-        Enumeration<NetworkInterface> e = null;
-
-        try {
-            e = NetworkInterface.getNetworkInterfaces();                       
-
-            while (e.hasMoreElements()) {                   
-                list.add(e.nextElement());
-            }        
-        } catch (SocketException ex) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Could not get network interfaces.");
+            if (ina.isLinkLocalAddress()) {
+                return 6;
             }
+
+            if (ina.isSiteLocalAddress()) {
+                return 4;
+            }
+
+            // It's a 'normal' global IP
+            return 2;
         }
-        
-        return list;
-    }
-    
-    /**
-     * Returns all the network interfaces found on this machine.
-     * 
-     * @return the network interfaces.
-     */
-    public static NetworkInterface [] getNetworkInterfaces() { 
-        ArrayList<NetworkInterface> list = getNetworkInterfacesList();       
-        
-        return list.toArray(new NetworkInterface[list.size()]);
-    }
-    
-    /**
-     * Adds all IP addresses that are bound to a specific network interface to 
-     * a list. If desired, loopback and/or IPv6 addresses can be ignored.  
-     * 
-     * @param nw the network interface for which the addresses are determined
-     * @param target the list used to store the addresses
-     * @param ignoreLoopback ignore loopback addresses 
-     * @param ignoreIP6 ignore IPv6 addresses
-     */
-    private static void getAllHostAddresses(NetworkInterface nw, 
-            List<InetAddress> target, boolean ignoreLoopback, boolean ignoreIP6) { 
-                
-        if (logger.isInfoEnabled()) {
-            logger.info("   " + nw.getDisplayName() + ":");
-        }
-                        
-        Enumeration<InetAddress> e2 = nw.getInetAddresses();
-            
-        while (e2.hasMoreElements()) {
-            
-            InetAddress tmp = e2.nextElement();
-                       
-            boolean t1 = !ignoreLoopback || !tmp.isLoopbackAddress();
-            boolean t2 = !ignoreIP6 || (tmp instanceof Inet4Address); 
-            
-            if (t1 && t2) {
-                if (logger.isInfoEnabled()) {
-                    logger.info("    - " + tmp.getHostAddress() + " (used)");
-                }
-                target.add(tmp);
+
+        /**
+         * This compares two InetAddresses.
+         * 
+         * Both parameters should either be an InetAddress or a
+         * InetSocketAddress. It starts by putting the addresses in one of the
+         * following classes:
+         * 
+         * 1. Global 2. Site Local 3. Link Local 4. Loopback
+         * 
+         * When the addresses end up in the same class, they are sorted by
+         * length. (shortest first, so IPv4 is preferred over IPv6). If their
+         * length is the same, the individual bytes are compared. The address
+         * with the lowest byte values comes first.
+         */
+        public int compare(InetAddress i1, InetAddress i2) {
+
+            int score1 = score(i1);
+            int score2 = score(i2);
+
+            int result = 0;
+
+            if (score1 == score2) {
+                result = compareAddress(i1, i2);
             } else {
-                if (logger.isInfoEnabled()) {
-                    logger.info("    - " + tmp.getHostAddress() + " (ignored)");
-                }
+                result = score1 - score2;
             }
+            return result;
         }
-    }
-            
+    }// end of inner AddressSorter class
+
+    // list of all addresses of this machine.
+    private static InetAddress[] addresses;
+
     /**
-     * Returns all IP addresses that could be found on this machine.
+     * Returns a sorted list of all local addresses of this machine. The list is
+     * sorted as follows:
+     * <ul>
+     * <li>Global Addresses</li>
+     * <li>Site local Addresses</li>
+     * <li>Link local Addresses</li>
+     * <li>Loopback addresses</li>
+     * </ul>
      * 
-     * @return all IP addresses found.
+     * If a global, site or link local address is present the loopback address
+     * is ommited from the result.
+     * 
+     * @return a sorted list of all local addresses of this machine.
+     * @throws UnknownHostException
+     *             in case no address could be found.
      */
-    public static InetAddress [] getAllHostAddresses() {
-        return getAllHostAddresses(false, false);
+    public static synchronized InetAddress[] getLocalHostAddresses()
+            throws UnknownHostException {
+
+        if (addresses == null) {
+            // Get all the local addresses, including IPv6 ones, but excluding
+            // loopback addresses, and sort them.
+            // TODO: removed ipv6 for now!!
+            addresses = getAllHostAddresses(true, true);
+
+            if (addresses == null || addresses.length == 0) {
+                // Oh dear, we don't have a network... Let's see if there is
+                // a loopback available...
+                // TODO: removed ipv6 for now!!
+                addresses = getAllHostAddresses(false, true);
+            }
+
+            if (addresses == null || addresses.length == 0) {
+                throw new UnknownHostException(
+                        "could not determine addresseses for localhost");
+            }
+
+            Arrays.sort(addresses, new AddressSorter());
+        }
+
+        return addresses;
     }
 
     /**
-     * Returns all IP addresses that could be found on this machine. 
-     * If desired, loopback and/or IPv6 addresses can be ignored.  
+     * Returns the "most public" InetAddress of this machine.
      * 
-     * @param ignoreLoopback ignore loopback addresses 
-     * @param ignoreIP6 ignore IPv6 addresses
+     * @return the "most public" InetAddress of this machine.
+     * @throws UnknownHostException
+     *             in case no address could be found.
+     */
+    public static InetAddress getLocalHostAddress() throws UnknownHostException {
+        // Trigger allocation of addresses if null, throws UnknownHostException
+        // if unsuccesful...
+        InetAddress[] addresses = getLocalHostAddresses();
+
+        return addresses[0];
+    }
+
+    /**
+     * Returns all IP addresses that could be found on this machine. If desired,
+     * loopback and/or IPv6 addresses can be ignored.
+     * 
+     * @param ignoreLoopback
+     *            ignore loopback addresses
+     * @param ignoreIP6
+     *            ignore IPv6 addresses
      * 
      * @return all IP addresses found that adhere to the restrictions.
      */
-    public static InetAddress [] getAllHostAddresses(boolean ignoreLoopback, 
-            boolean ignoreIP6) { 
+    private static InetAddress[] getAllHostAddresses(boolean ignoreLoopback,
+            boolean ignoreIP6) {
 
-        ArrayList<NetworkInterface> nwl = getNetworkInterfacesList();
         ArrayList<InetAddress> list = new ArrayList<InetAddress>();
-            
-        if (logger.isInfoEnabled()) {
-            logger.info("Determining available addresses:");
+
+        try {
+            Enumeration<NetworkInterface> interfaces =
+                    NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = interfaces.nextElement();
+                getAllHostAddresses(networkInterface, list, ignoreLoopback,
+                        ignoreIP6);
+            }
+        } catch (SocketException e) {
+            // IGNORE
         }
-        
-        for (NetworkInterface nwi : nwl) { 
-            getAllHostAddresses(nwi, list, ignoreLoopback, ignoreIP6);
-        } 
-        
+
         return list.toArray(new InetAddress[list.size()]);
     }
-    
-    private static InetAddress doWorkGetSpecificHostAddress(String ha) {
-
-        InetAddress address = null;
-        byte[] subnet = null;
-        byte[] netmask = null;
-
-        int index = ha.indexOf("/");
-
-        if (index == -1) {
-            logger.debug("Simple network address specified: " + ha);
-            try {
-                address = InetAddress.getByName(ha);
-            } catch (UnknownHostException e) {
-                logger.debug("Simple network address " + ha
-                    + " could not be resolved!");
-            }
-        } else {
-            logger.debug("Subnet/netmask specified: " + ha);
-
-            subnet = addressToBytes(ha.substring(0, index));
-            netmask = addressToBytes(ha.substring(index + 1));
-
-            InetAddress[] all = getAllHostAddresses();
-
-            if (all != null) {
-                for (int i = 0; i < all.length; i++) {
-                    if (matchAddress(subnet, netmask, all[i].getAddress())) {
-                        logger.debug("Address " + all[i] + " matches " + ha);
-                        address = all[i];
-                        break;
-                    } else {
-                        logger.debug("Address " + all[i] + " does not match "
-                            + ha);
-                    }
-                }
-            }
-
-            logger.debug("No address matching " + ha + " found");
-        }
-
-        if (address != null) {
-            logger.info("Specified IP address found: " + address);
-            return address;
-        }
-
-        Enumeration e = null;
-
-        try {
-            e = NetworkInterface.getNetworkInterfaces();
-        } catch (SocketException ex) {
-            logger.debug("Could not get network interfaces.");
-            return null;
-        }
-
-        /*
-         * Preference order:
-         * 1. external and IPv4.
-         * 2. external
-         * 3. sitelocal and IPv4
-         * 4. sitelocal
-         * 5. Ipv4
-         * 6. other
-         */
-
-        while (e.hasMoreElements()) {
-
-            NetworkInterface nw = (NetworkInterface) e.nextElement();
-
-            logger.debug("Trying interface: " + nw.getName());
-
-            Enumeration e2 = nw.getInetAddresses();
-
-            while (e2.hasMoreElements()) {
-                InetAddress tmp = (InetAddress) e2.nextElement();
-
-                if (matchAddress(subnet, netmask, tmp.getAddress())) {
-                    logger.debug("Address " + tmp + " matches " + ha);
-                    return tmp;
-                } else {
-                    logger.debug("Address " + tmp + " does mot match " + ha);
-                }
-            }
-        }
-
-        logger.debug("No IP address matching " + ha + " was found");
-
-        return null;
-    }
-
-    private static InetAddress doWorkGetSpecificNetworkInterface(String ni,
-            InetAddress known) {
-
-        InetAddress external = known;
-        InetAddress internal = null;
-
-        String externalNI = null;
-        String internalNI = null;
-
-        boolean first = true;
-
-        Enumeration e = null;
-
-        try {
-            e = NetworkInterface.getNetworkInterfaces();
-        } catch (SocketException ex) {
-            logger.debug("Could not get network interfaces.");
-            return null;
-        }
-
-        /*
-         * Preference order:
-         * 1. external and IPv4.
-         * 2. external
-         * 3. sitelocal and IPv4
-         * 4. sitelocal
-         * 5. Ipv4
-         * 6. other
-         */
-
-        while (e.hasMoreElements()) {
-
-            NetworkInterface nw = (NetworkInterface) e.nextElement();
-
-            if (ni == null || nw.getName().equals(ni)) {
-
-                logger.debug("Trying interface: " + nw.getName());
-
-                Enumeration e2 = nw.getInetAddresses();
-
-                while (e2.hasMoreElements()) {
-                    InetAddress tmp = (InetAddress) e2.nextElement();
-
-                    if (isExternalAddress(tmp)) {
-                        if (external == null) {
-                            external = tmp;
-                            externalNI = nw.getName();
-                        } else if (external.equals(tmp)) {
-                            if (externalNI == null) {
-                                externalNI = nw.getName();
-                            }
-                        } else if (!(external instanceof Inet4Address)
-                            && tmp instanceof Inet4Address) {
-                            // Preference for IPv4
-                            external = tmp;
-                            externalNI = nw.getName();
-                        } else {
-                            if (first) {
-                                first = false;
-                                logger.info("WARNING, this machine has "
-                                    + "more than one external IP "
-                                    + "address, using " + external
-                                    + " but found " + tmp + " as well");
-                            } else {
-                                logger
-                                    .info("... and found " + tmp + " as well");
-                            }
-                        }
-                    } else if (internal == null) {
-                        internal = tmp;
-                        internalNI = nw.getName();
-                    } else if (tmp.isSiteLocalAddress()) {
-                        if (!internal.isSiteLocalAddress()
-                            || !(internal instanceof Inet4Address)) {
-                            internal = tmp;
-                            internalNI = nw.getName();
-                        }
-                    } else {
-                        if (!internal.isSiteLocalAddress()
-                            && !(internal instanceof Inet4Address)) {
-                            internal = tmp;
-                            internalNI = nw.getName();
-                        }
-                    }
-                }
-            }
-        }
-
-        if (external != null) {
-            logger.debug("Found external address " + external + " on network "
-                + "interface " + externalNI);
-            return external;
-        }
-
-        if (internal != null) {
-            logger.debug("Found internal address " + internal + " on network "
-                + "interface " + internalNI);
-
-            return internal;
-        }
-
-        logger.debug("Did not find any suitable address"
-            + (ni == null ? "" : (" on network interface " + ni)));
-        return null;
-    }
-
-    private static InetAddress doWorkGetLocalHostAddress() {
-        if (detected != null) {
-            return detected;
-        }
-
-        InetAddress external = null;
-
-        InetAddress[] all = getAllHostAddresses();
-        
-        if (all != null) {
-            for (int i = 0; i < all.length; i++) {
-                if (isExternalAddress(all[i])) {
-                    external = all[i];
-                    logger.debug("trying address: " + external + " EXTERNAL");
-                    external = doWorkGetSpecificNetworkInterface(null, external);
-
-                    if(external != null) break;
-                }
-            }
-        }
-
-        if (external == null) {
-            try {
-                InetAddress a = InetAddress.getLocalHost();
-
-                if (a != null) {
-                    String name = a.getHostName();
-                    external =
-                            InetAddress.getByName(InetAddress.getByName(name)
-                                .getHostAddress());
-                }
-            } catch (UnknownHostException ex) {
-                // ignore
-            }
-        }
-
-        if (external == null) {
-            logger.error("Could not find local IP address, you "
-                + "should specify the "
-                + "-Dibis.util.ip.address=A.B.C.D option");
-            return null;
-        }
-
-        detected = external;
-        return external;
-    }
-    
 
     /**
-     * Returns the hostname associated with the local host.
+     * Adds all IP addresses that are bound to a specific network interface to a
+     * list. If desired, loopback and/or IPv6 addresses can be ignored.
+     * 
+     * @param nw
+     *            the network interface for which the addresses are determined
+     * @param target
+     *            the list used to store the addresses
+     * @param ignoreLoopback
+     *            ignore loopback addresses
+     * @param ignoreIP6
+     *            ignore IPv6 addresses
      */
-    public static String getLocalHostName() {
-        try {
-            InetAddress a = InetAddress.getLocalHost();
-            if (a != null) {
-                return a.getHostName();
+    private static void getAllHostAddresses(NetworkInterface nw,
+            List<InetAddress> target, boolean ignoreLoopback, boolean ignoreIP6) {
+
+        Enumeration<InetAddress> e2 = nw.getInetAddresses();
+
+        while (e2.hasMoreElements()) {
+
+            InetAddress tmp = e2.nextElement();
+
+            boolean t1 = !ignoreLoopback || !tmp.isLoopbackAddress();
+            boolean t2 = !ignoreIP6 || (tmp instanceof Inet4Address);
+
+            if (t1 && t2) {
+                target.add(tmp);
             }
-        } catch(IOException e) {
-            // ignored
         }
-        return getLocalHostAddress().getHostName();
     }
+
 }
