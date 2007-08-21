@@ -22,6 +22,10 @@ public class Timer implements java.io.Serializable {
 
     protected long lastTime = 0;
 
+    protected long maxTime = 0;
+
+    protected long minTime = Long.MAX_VALUE;
+
     protected long t_start = 0;
 
     protected boolean started = false;
@@ -178,12 +182,48 @@ public class Timer implements java.io.Serializable {
     }
 
     /**
+     * Returns the maximum measured time in microseconds.
+     * 
+     * @return the maximum measured time.
+     */
+    public double maxTimeVal() {
+        return 1000.0 * maxTime;
+    }
+
+    /**
+     * Returns the minimum measured time in microseconds.
+     * 
+     * @return the minimum measured time.
+     */
+    public double minTimeVal() {
+        return 1000.0 * minTime;
+    }
+
+    /**
      * Returns the last measured time in microseconds, nicely formatted.
      * 
      * @return the last measured time.
      */
     public String lastTime() {
         return format(lastTimeVal());
+    }
+
+    /**
+     * Returns the maximum measured time in microseconds, nicely formatted.
+     * 
+     * @return the maximum measured time.
+     */
+    public String maxTime() {
+        return format(maxTimeVal());
+    }
+
+    /**
+     * Returns the minimum measured time in microseconds, nicely formatted.
+     * 
+     * @return the minimum measured time.
+     */
+    public String minTime() {
+        return format(minTimeVal());
     }
 
     /**
@@ -220,6 +260,12 @@ public class Timer implements java.io.Serializable {
 
         lastTime = System.currentTimeMillis() - t_start;
         time += lastTime;
+        if (lastTime > maxTime) {
+            maxTime = lastTime;
+        }
+        if (lastTime < minTime) {
+            minTime = lastTime;
+        }
         ++count;
         started = false;
     }

@@ -53,6 +53,14 @@ public class NanoTimer extends Timer {
         return lastTime / 1000.0;
     }
 
+    public double maxTimeVal() {
+        return maxTime / 1000.0;
+    }
+
+    public double minTimeVal() {
+        return minTime / 1000.0;
+    }
+
     public void start() {
         if (started) {
             throw new Error("Timer started twice");
@@ -68,6 +76,12 @@ public class NanoTimer extends Timer {
 
         lastTime = invokeNanoTimer() - t_start;
         time += lastTime;
+        if (lastTime > maxTime) {
+            maxTime = lastTime;
+        }
+        if (lastTime < minTime) {
+            minTime = lastTime;
+        }
         ++count;
         started = false;
     }
