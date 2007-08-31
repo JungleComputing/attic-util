@@ -57,7 +57,7 @@ public final class RunProcess {
      * Separate thread that reads the output and error output of the
      * command.
      */
-    private class Proc extends Thread {
+    private static class Proc extends Thread {
         buf b;
 
         Proc(buf b) {

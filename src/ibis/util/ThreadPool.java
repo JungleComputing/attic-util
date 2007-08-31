@@ -128,6 +128,8 @@ public final class ThreadPool {
                     // Exit, rather than continue. A thread died unexpectedly,
                     // after all. If you dont want this, catch all throwables
                     // yourself.
+                    // Throwing an exception here makes no sense: it will only
+                    // kill the thread.
                     System.exit(1);
                 }
                 synchronized (this) {

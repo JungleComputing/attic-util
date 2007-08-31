@@ -22,7 +22,9 @@ public class IPUtils {
     /**
      * Inner class capable of sorting addresses
      */
-    private static class AddressSorter implements Comparator<InetAddress> {
+    private static class AddressSorter implements Comparator<InetAddress>, java.io.Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         /**
          * Orders two addresses based on their length. If both addresses have
@@ -157,7 +159,7 @@ public class IPUtils {
             Arrays.sort(addresses, new AddressSorter());
         }
 
-        return addresses;
+        return (InetAddress[]) addresses.clone();
     }
 
     /**
