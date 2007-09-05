@@ -52,6 +52,11 @@ public class Timer implements java.io.Serializable {
         count += t.count;
     }
 
+    /**
+     * Adds the contents of the parameters to this timer.
+     * @param t the time in microseconds to be added.
+     * @param cnt the number of start/stop sequences.
+     */
     public synchronized void add(long t, int cnt) {
         time += t * 1000;
         count += cnt;

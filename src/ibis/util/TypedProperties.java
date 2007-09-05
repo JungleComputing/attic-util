@@ -535,7 +535,7 @@ public class TypedProperties extends Properties {
                 String suffix = key.substring(prefix.length());
                 String value = getProperty(key);
 
-                if (!startsWith(suffix, validPrefixes)
+                if (!startsWith(suffix, validSubPrefixes)
                         && !contains(validKeys, key)) {
                     if (printWarning) {
                         System.err.println("Warning, unknown property: " + key
