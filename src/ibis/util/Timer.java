@@ -8,9 +8,6 @@ import java.lang.reflect.Method;
  * Utility for measuring time.
  */
 public class Timer implements java.io.Serializable {
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
     /**
@@ -29,37 +26,6 @@ public class Timer implements java.io.Serializable {
     protected long t_start = 0;
 
     protected boolean started = false;
-
-    private static Method nanoTimer = null;
-
-    private static boolean nanoMode = false;
-
-    private static boolean nanoTimerFailed = false;
-
-    {
-        // load the java.lang.System class descriptor.
-        Class cl = null;
-        try {
-            cl = Class.forName("java.lang.System");
-        } catch (ClassNotFoundException e) {
-            // O well, 
-        }
-
-        if (cl != null) {
-            // Find the "nanoTime" method.
-            try {
-                nanoTimer = cl.getMethod("nanoTime", new Class[] {});
-            } catch (Exception e) {
-                // O well, older Java version ...
-            }
-        }
-        if (nanoTimer != null) {
-            invokeNanoTimer();
-            if (!nanoTimerFailed) {
-                nanoMode = true;
-            }
-        }
-    }
 
     /**
      * Constructs a <code>Timer</code>.
@@ -87,7 +53,7 @@ public class Timer implements java.io.Serializable {
     }
 
     public synchronized void add(long t, int cnt) {
-        time += t / 1000.0;
+        time += t * 1000;
         count += cnt;
     }
 
@@ -98,7 +64,7 @@ public class Timer implements java.io.Serializable {
      * @return the accuracy.
      */
     public double accuracy() {
-        return 1e-3;
+        return 1e-9;
     }
 
     /**
@@ -107,17 +73,7 @@ public class Timer implements java.io.Serializable {
      * @return the current time stamp.
      */
     public long currentTimeNanos() {
-        return System.currentTimeMillis() * 1000000L;
-    }
-
-    static long invokeNanoTimer() {
-        try {
-            Object o = nanoTimer.invoke(null, new Object[] {});
-            return ((Long) o).longValue();
-        } catch (Exception e) {
-            nanoTimerFailed = true;
-        }
-        return 0L;
+        return System.nanoTime();
     }
 
     /**
@@ -137,9 +93,9 @@ public class Timer implements java.io.Serializable {
 
         long cur_time = 0;
         if (started) {
-            cur_time = System.currentTimeMillis() - t_start;
+            cur_time = System.nanoTime() - t_start;
         }
-        return 1000.0 * (time+cur_time);
+        return (time+cur_time)/1000.0;
     }
 
     /**
@@ -158,7 +114,7 @@ public class Timer implements java.io.Serializable {
      */
     public double averageTimeVal() {
         if (count > 0) {
-            return 1000.0 * time / (count);
+            return time / (count * 1000.0);
         }
         return 0.0;
     }
@@ -178,7 +134,7 @@ public class Timer implements java.io.Serializable {
      * @return the last measured time.
      */
     public double lastTimeVal() {
-        return 1000.0 * lastTime;
+        return lastTime / 1000.0;
     }
 
     /**
@@ -187,7 +143,7 @@ public class Timer implements java.io.Serializable {
      * @return the maximum measured time.
      */
     public double maxTimeVal() {
-        return 1000.0 * maxTime;
+        return maxTime / 1000.0;
     }
 
     /**
@@ -196,7 +152,7 @@ public class Timer implements java.io.Serializable {
      * @return the minimum measured time.
      */
     public double minTimeVal() {
-        return 1000.0 * minTime;
+        return minTime / 1000.0;
     }
 
     /**
@@ -245,7 +201,7 @@ public class Timer implements java.io.Serializable {
             throw new Error("Timer started twice");
         }
         started = true;
-        t_start = System.currentTimeMillis();
+        t_start = System.nanoTime();
     }
 
     /**
@@ -258,7 +214,7 @@ public class Timer implements java.io.Serializable {
             throw new Error("Time stopped, but not started");
         }
 
-        lastTime = System.currentTimeMillis() - t_start;
+        lastTime = System.nanoTime() - t_start;
         time += lastTime;
         if (lastTime > maxTime) {
             maxTime = lastTime;
@@ -331,9 +287,9 @@ public class Timer implements java.io.Serializable {
     /**
      * Returns a Timer instance indicated by the implementation name provided.
      * Returns the default timer when the implementation could not be loaded.
-     * This default could use a native timer, System.currentTimeMillis(), or
-     * System.nanoTime() if it exists. The accuracy of the timer can be
-     * obtained through the {@link #accuracy()} method.
+     * This default could use a native timer or System.nanoTime().
+     * The accuracy of the timer can be obtained through the
+     * {@link #accuracy()} method.
      * 
      * @param impl
      *            the name of the Timer implementation.
@@ -358,14 +314,9 @@ public class Timer implements java.io.Serializable {
     public static Timer createTimer() {
         try {
             Class c = null;
-            if (nanoMode) {
-                c = Class.forName("ibis.util.NanoTimer");
-            } else {
-                c = Class.forName("ibis.util.nativeCode.Rdtsc");
-            }
+            c = Class.forName("ibis.util.nativeCode.Rdtsc");
             return (Timer) c.newInstance();
         } catch(Throwable t) {
-            nanoMode = false;
             return new Timer();
         }
     }

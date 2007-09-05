@@ -521,7 +521,7 @@ public class TypedProperties extends Properties {
      *            unknown property
      */
     public TypedProperties checkProperties(String prefix, String[] validKeys,
-            String[] validPrefixes, boolean printWarning) {
+            String[] validSubPrefixes, boolean printWarning) {
         TypedProperties result = new TypedProperties();
 
         if (prefix == null) {
