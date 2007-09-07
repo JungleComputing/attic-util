@@ -2,8 +2,6 @@
 
 package ibis.util;
 
-import java.lang.reflect.Method;
-
 /**
  * Utility for measuring time.
  */
