@@ -18,18 +18,6 @@ public class TypedProperties extends Properties {
 
     private static final long serialVersionUID = 1L;
 
-    public static final String DEFAULT_CONFIG_FILE = "ibis.properties";
-
-    public static final String DEFAULT_CONFIG_FILE_PROPERTY = "ibis.properties.file";
-
-    public static TypedProperties getDefaultConfigProperties() {
-        TypedProperties result = new TypedProperties();
-        result.loadDefaultConfigProperties();
-        
-        return result;
-    }
-    
-   
     /** Constructs an empty typed properties object. */
     public TypedProperties() {
         super();
@@ -122,24 +110,6 @@ public class TypedProperties extends Properties {
                 + fileName);
     }
     
-    /**
-     * Loads configuration options from the default configuration 
-     * locations for the Ibis project.
-     * The following location are added (in order):
-     * <ol>
-     * <li>A file "ibis.properties" in the classpath</li>
-     * <li>A file "ibis.properties" in the current working directory</li>
-     * <li>A file, speficied by the "ibis.properties.file" system property</li>
-     * <li>The System properties</li>
-     * </ol>
-     */
-    public void loadDefaultConfigProperties() {
-        loadFromClassPath(DEFAULT_CONFIG_FILE);
-        loadFromFile(DEFAULT_CONFIG_FILE);
-        loadFromFile(System.getProperty(DEFAULT_CONFIG_FILE_PROPERTY));
-        addProperties(System.getProperties());
-    }
-
 
     /**
      * Returns true if property <code>name</code> is defined and has a value
