@@ -6,6 +6,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -164,6 +165,7 @@ public class ClassLister {
      */
     public List<Class> getClassList(String attribName) {
         ArrayList<Class> list = new ArrayList<Class>();
+        HashSet<String> classNames = new HashSet<String>();
 
         for (int i = 0; i < jarFiles.length; i++) {
             Manifest mf = null;
@@ -175,18 +177,21 @@ public class ClassLister {
             }
             if (mf != null) {
                 Attributes ab = mf.getMainAttributes();
-                String classNames = ab.getValue(attribName);
-                if (classNames != null) {
-                    StringTokenizer st = new StringTokenizer(classNames, ", ");
+                String names = ab.getValue(attribName);
+                if (names != null) {
+                    StringTokenizer st = new StringTokenizer(names, ", ");
                     while (st.hasMoreTokens()) {
                         String className = st.nextToken();
-                        try {
-                            Class cl = Class.forName(className, false, ld);
-                            list.add(cl);
-                        } catch(Exception e) {
-                            throw new Error("Could not load class " + className
-                                    + ". Something wrong with jar "
-                                    + jarFiles[i].getName() + "?", e);
+                        if (! classNames.contains(className)) {
+                            try {
+                                Class cl = Class.forName(className, false, ld);
+                                list.add(cl);
+                                classNames.add(className);
+                            } catch(Exception e) {
+                                throw new Error("Could not load class " + className
+                                        + ". Something wrong with jar "
+                                        + jarFiles[i].getName() + "?", e);
+                            }
                         }
                     }
                 }
