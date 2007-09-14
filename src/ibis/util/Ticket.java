@@ -22,13 +22,8 @@ public class Ticket {
      */
     private final static int INIT_SIZE = 16;
 
-    static Logger logger;
+    static Logger logger = Logger.getLogger(Ticket.class.getName());
     
-    static {
-        Log.initLog4J("ibis.util");
-        logger = Logger.getLogger(Ticket.class.getName());
-    }
-
     /**
      * Bucket associated with a ticket. It contains room for the object
      * that is to be associated with the ticket, and some other administrative

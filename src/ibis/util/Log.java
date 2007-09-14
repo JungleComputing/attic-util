@@ -9,6 +9,7 @@ import org.apache.log4j.WriterAppender;
  * Utility to initialize log4j, even in the absence of a log4j.properties
  * file.
  */
+@Deprecated
 public class Log {
 
     /**

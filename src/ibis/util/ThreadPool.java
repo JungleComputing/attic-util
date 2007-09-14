@@ -14,12 +14,7 @@ import org.apache.log4j.Logger;
  */
 public final class ThreadPool {
 
-    static final Logger logger;
-    
-    static {
-        Log.initLog4J("ibis.util");
-        logger = Logger.getLogger(ThreadPool.class);
-    }
+    static final Logger logger = Logger.getLogger(ThreadPool.class);
     
     private static final class PoolThread extends Thread {
 
