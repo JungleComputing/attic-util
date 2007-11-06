@@ -1,8 +1,9 @@
-<project name="ibisUtil" default="build" basedir=".">
+<project name="ibis-util" default="build" basedir=".">
     <description>
-	Build file for ibisUtil
+	Build file for ibis-util
     </description>
-    <!-- Global properties for ibisUtil -->
+
+    <!-- Global properties -->
     <property name="src" location="src" />
     <property name="tmp" location="tmp" />
     <property name="lib" location="lib" />
@@ -12,8 +13,8 @@
 
     <property name="version" value="-2.0rc2" />
 
-    <property name="jar" location="${lib}/ibis-util${version}.jar" />
-    <property name="sources-zip" location="${sources}/ibis-util${version}-src.zip" />
+    <property name="jar" location="${lib}/${ant.project.name}${version}.jar" />
+    <property name="sources-filename" value="${ant.project.name}${version}" />
 
     <path id="external_jars">
         <fileset dir="${external}">
@@ -49,9 +50,7 @@
         <!-- create the javadoc -->
         <javadoc destdir="javadoc"
                  access="public"
-                 packagenames="ibis.util.*"
-                 sourcepath="${src}"
-                 overview="src/ibis/util/package.html">
+                 sourcepath="${src}">
             <classpath refid="external_jars" />
             <link href="http://logging.apache.org/log4j/docs/api/" />
             <link href="http://java.sun.com/j2se/1.5.0/docs/api/" />
@@ -61,9 +60,9 @@
         <jar jarfile="${jar}" basedir="${tmp}" />
 
 	<!-- create a zip file with the sources -->
-	 <zip destfile="${sources-zip}">
-            <zipfileset dir="src" includes="**/*.java" prefix="ibis-util${version}" />
-            <zipfileset dir="." includes="LICENSE.txt" prefix="ibis-util${version}" />
+	 <zip destfile="${sources}/${sources-filename}.zip">
+            <zipfileset dir="src" includes="**/*.java" prefix="${sources-filename}" />
+            <zipfileset dir="." includes="LICENSE.txt" prefix="${sources-filename}" />
         </zip>
 
         <!-- And delete the build dir -->
