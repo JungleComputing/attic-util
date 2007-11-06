@@ -6,65 +6,76 @@
     <property name="src" location="src" />
     <property name="tmp" location="tmp" />
     <property name="lib" location="lib" />
-    <property name="doc" location="doc" />
+    <property name="javadoc" location="javadoc" />
     <property name="external" location="external" />
+    <property name="sources" value="sources" />
 
-    <property name="version" value="-2.0rc1"/>
+    <property name="version" value="-2.0rc2" />
 
     <property name="jar" location="${lib}/ibis-util${version}.jar" />
+    <property name="sources-zip" location="${sources}/ibis-util${version}-src.zip" />
 
     <path id="external_jars">
-	<fileset dir="${external}">
-	    <include name="*.jar" />
-	</fileset>
+        <fileset dir="${external}">
+            <include name="*.jar" />
+        </fileset>
     </path>
 
-    <target name="init">
-	<!-- Create the time stamp -->
-	<tstamp />
+    <target name="build">
+        <!-- Create the time stamp -->
+        <tstamp />
 
-	<!-- Create the build directory structure used by compile -->
-	<mkdir dir="${tmp}" />
-	<mkdir dir="${doc}/javadoc" />
-    </target>
+        <!-- Create the build directory structure used by compile -->
+        <delete dir="${lib}" />
+        <delete dir="${tmp}" />
+        <delete dir="${javadoc}" />
+        <delete dir="${sources}" />
 
-    <target name="compile" depends="init" description="compile the source ">
-	<!-- Compile the java code from ${src} into ${tmp} -->
-	<javac srcdir="${src}" destdir="${tmp}" debug="on" >
-	    <classpath refid="external_jars" />
-	    <compilerarg value="-Xlint:unchecked"/>
-	</javac>
-    </target>
+        <mkdir dir="${tmp}" />
+        <mkdir dir="${lib}" />
+        <mkdir dir="${javadoc}" />
+        <mkdir dir="${sources}" />
 
-    <target name="build" depends="compile" description="build the JAR file">
-	<!-- Create the distribution directory -->
-	<mkdir dir="${lib}" />
+        <!-- Compile the java code from ${src} into ${tmp} -->
+        <javac srcdir="${src}" destdir="${tmp}" debug="on">
+            <classpath refid="external_jars" />
+            <compilerarg value="-Xlint:unchecked" />
+        </javac>
 
-	<!-- Put everything in ${tmp} into the jar file -->
-	<jar jarfile="${jar}" basedir="${tmp}" />
+        <!-- Create the distribution directory -->
+        <mkdir dir="${lib}" />
 
-	<!-- And delete the build dir -->
-	<delete dir="${tmp}" />
-    </target>
 
-    <target name="dist" depends="build,javadoc" description="build the JAR file and documentation" />
+        <!-- create the javadoc -->
+        <javadoc destdir="javadoc"
+                 access="public"
+                 packagenames="ibis.util.*"
+                 sourcepath="${src}"
+                 overview="src/ibis/util/package.html">
+            <classpath refid="external_jars" />
+            <link href="http://logging.apache.org/log4j/docs/api/" />
+            <link href="http://java.sun.com/j2se/1.5.0/docs/api/" />
+        </javadoc>
 
-    <target name="javadoc" depends="compile" description="generate all javadocs">
-	<javadoc destdir="${doc}/javadoc" access="public" packagenames="ibis.util.*" sourcepath="${src}" overview="src/ibis/util/package.html">
-	    <classpath refid="external_jars"/>
-	    <link href="http://logging.apache.org/log4j/docs/api/"/>
-	    <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
-	</javadoc>
+        <!-- Put everything in ${tmp} into the jar file -->
+        <jar jarfile="${jar}" basedir="${tmp}" />
 
-	<!-- And delete the build dir -->
-	<delete dir="${tmp}" />
+	<!-- create a zip file with the sources -->
+	 <zip destfile="${sources-zip}">
+            <zipfileset dir="src" includes="**/*.java" prefix="ibis-util${version}" />
+            <zipfileset dir="." includes="LICENSE.txt" prefix="ibis-util${version}" />
+        </zip>
+
+        <!-- And delete the build dir -->
+        <delete dir="${tmp}" />
     </target>
 
     <target name="clean" description="clean up">
-	<delete dir="${lib}" />
+        <delete dir="${lib}" />
+        <delete dir="${tmp}" />
+        <delete dir="${javadoc}" />
+	<delete file="${sources-zip}"/>
     </target>
 
-    <target name="distclean" depends="clean" description="clean up, including docs">
-	<delete dir="${doc}/javadoc" />
-    </target>
+
 </project>
