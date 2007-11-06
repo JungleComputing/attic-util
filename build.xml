@@ -74,7 +74,7 @@
         <delete dir="${lib}" />
         <delete dir="${tmp}" />
         <delete dir="${javadoc}" />
-	<delete file="${sources-zip}"/>
+	<delete dir="${sources}"/>
     </target>
 
 
