@@ -2,10 +2,15 @@
 
 package ibis.util;
 
+import org.apache.log4j.Logger;
+
 /**
  * Utility for measuring time.
  */
 public class Timer implements java.io.Serializable {
+
+    static final Logger logger = Logger.getLogger(Timer.class.getName());
+
     private static final long serialVersionUID = 1L;
 
     /**
@@ -201,7 +206,7 @@ public class Timer implements java.io.Serializable {
      */
     public void start() {
         if (started) {
-            throw new Error("Timer started twice");
+            logger.error("Timer started twice!", new Error("Timer started twice"));
         }
         started = true;
         t_start = System.nanoTime();
@@ -214,7 +219,7 @@ public class Timer implements java.io.Serializable {
      */
     public void stop() {
         if (!started) {
-            throw new Error("Time stopped, but not started");
+            logger.error("Timer stopped, but not started!", new Error("Timer stopped, but not started!"));
         }
 
         lastTime = System.nanoTime() - t_start;
