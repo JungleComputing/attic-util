@@ -10,6 +10,9 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility to extract and check typed properties.
@@ -27,7 +30,7 @@ public class TypedProperties extends Properties {
      * Constructs a typed properties object with the specified defaults.
      * 
      * @param defaults
-     *            the defaults.
+     *                the defaults.
      */
     public TypedProperties(Properties defaults) {
         super(defaults);
@@ -37,7 +40,7 @@ public class TypedProperties extends Properties {
      * Adds the specified properties to the current ones.
      * 
      * @param properties
-     *            the properties to add.
+     *                the properties to add.
      */
     public void addProperties(Properties properties) {
         if (properties == null) {
@@ -77,8 +80,35 @@ public class TypedProperties extends Properties {
     }
 
     /**
+     * expands all existing system variables of the form ${...} to their value
+     * only in the value part of a key,value pair.
+     */
+    public void expandSystemVariables() {
+        Set<Object> keys = keySet();
+        // everything starting with '${' followed by one or more
+        // [A-Z][a-z]_[0-9] and ending with '}'
+        Pattern pattern = Pattern.compile("\\$\\{\\w+?\\}");
+        for (Object key : keys) {
+            Matcher matcher = pattern.matcher((String) get(key));
+            while (matcher.find()) {
+                // this will be something of the form ${...}
+                String fullSystemVar = matcher.group();
+                // remove the prefix '${' and the postfix '}'
+                String strippedSystemVar = fullSystemVar.substring(2,
+                        fullSystemVar.length() - 1);
+                if (System.getenv(strippedSystemVar) != null) {
+                    put(key, ((String) get(key)).replace(fullSystemVar, System
+                            .getenv(strippedSystemVar)));
+                    // update the matcher
+                    matcher = pattern.matcher((String) get(key));
+                }
+            }
+        }
+    }
+
+    /**
      * Tries to load properties from a file. Does not throw any exceptions if
-     * unsuccesfull
+     * unsuccessful
      */
     public void loadFromFile(String file) {
         if (file == null) {
@@ -109,7 +139,6 @@ public class TypedProperties extends Properties {
         loadFromFile(System.getProperty("user.home") + File.separator
                 + fileName);
     }
-    
 
     /**
      * Returns true if property <code>name</code> is defined and has a value
@@ -118,7 +147,7 @@ public class TypedProperties extends Properties {
      * 
      * @return true if property is defined and set
      * @param name
-     *            property name
+     *                property name
      */
     public boolean getBooleanProperty(String name) {
         return getBooleanProperty(name, false);
@@ -132,9 +161,9 @@ public class TypedProperties extends Properties {
      * 
      * @return true if property is defined and set
      * @param key
-     *            property name
+     *                property name
      * @param defaultValue
-     *            the value that is returned if the property is absent
+     *                the value that is returned if the property is absent
      */
     public boolean getBooleanProperty(String key, boolean defaultValue) {
         String value = getProperty(key);
@@ -152,9 +181,9 @@ public class TypedProperties extends Properties {
      * 
      * @return the integer value of property
      * @param key
-     *            property name
+     *                property name
      * @throws NumberFormatException
-     *             if the property is undefined or not an integer
+     *                 if the property is undefined or not an integer
      */
     public int getIntProperty(String key) {
         String value = getProperty(key);
@@ -176,11 +205,11 @@ public class TypedProperties extends Properties {
      * 
      * @return the integer value of property
      * @param key
-     *            property name
+     *                property name
      * @param defaultValue
-     *            default value if the property is undefined
+     *                default value if the property is undefined
      * @throws NumberFormatException
-     *             if the property defined and not an integer
+     *                 if the property defined and not an integer
      */
     public int getIntProperty(String key, int defaultValue) {
         String value = getProperty(key);
@@ -202,9 +231,9 @@ public class TypedProperties extends Properties {
      * 
      * @return the long value of property
      * @param key
-     *            property name
+     *                property name
      * @throws NumberFormatException
-     *             if the property is undefined or not an long
+     *                 if the property is undefined or not an long
      */
     public long getLongProperty(String key) {
         String value = getProperty(key);
@@ -226,11 +255,11 @@ public class TypedProperties extends Properties {
      * 
      * @return the long value of property
      * @param key
-     *            property name
+     *                property name
      * @param defaultValue
-     *            default value if the property is undefined
+     *                default value if the property is undefined
      * @throws NumberFormatException
-     *             if the property defined and not an Long
+     *                 if the property defined and not an Long
      */
     public long getLongProperty(String key, long defaultValue) {
         String value = getProperty(key);
@@ -252,9 +281,9 @@ public class TypedProperties extends Properties {
      * 
      * @return the short value of property
      * @param key
-     *            property name
+     *                property name
      * @throws NumberFormatException
-     *             if the property is undefined or not an short
+     *                 if the property is undefined or not an short
      */
     public short getShortProperty(String key) {
         String value = getProperty(key);
@@ -276,11 +305,11 @@ public class TypedProperties extends Properties {
      * 
      * @return the short value of property
      * @param key
-     *            property name
+     *                property name
      * @param defaultValue
-     *            default value if the property is undefined
+     *                default value if the property is undefined
      * @throws NumberFormatException
-     *             if the property defined and not an Short
+     *                 if the property defined and not an Short
      */
     public short getShortProperty(String key, short defaultValue) {
         String value = getProperty(key);
@@ -305,9 +334,9 @@ public class TypedProperties extends Properties {
      * 
      * @return the size value of property
      * @param key
-     *            property name
+     *                property name
      * @throws NumberFormatException
-     *             if the property is undefined or not a valid size
+     *                 if the property is undefined or not a valid size
      */
     public long getSizeProperty(String key) {
         String value = getProperty(key);
@@ -327,11 +356,11 @@ public class TypedProperties extends Properties {
      * 
      * @return the size value of property
      * @param key
-     *            property name
+     *                property name
      * @param defaultValue
-     *            the default value
+     *                the default value
      * @throws NumberFormatException
-     *             if the property is not a valid size
+     *                 if the property is not a valid size
      */
     public long getSizeProperty(String key, long defaultValue) {
         String value = getProperty(key);
@@ -370,7 +399,7 @@ public class TypedProperties extends Properties {
      * array of strings is returned.
      * 
      * @param key
-     *            the property name
+     *                the property name
      * @return the split-up property value.
      */
     public String[] getStringList(String key) {
@@ -384,9 +413,9 @@ public class TypedProperties extends Properties {
      * the property is not defined, an empty array of strings is returned.
      * 
      * @param key
-     *            the property name
+     *                the property name
      * @param delim
-     *            the delimiter
+     *                the delimiter
      * @return the split-up property value.
      */
     public String[] getStringList(String key, String delim) {
@@ -400,11 +429,11 @@ public class TypedProperties extends Properties {
      * the property is not defined, the specified default value is returned.
      * 
      * @param key
-     *            the property name
+     *                the property name
      * @param delim
-     *            the delimiter
+     *                the delimiter
      * @param defaultValue
-     *            the default value
+     *                the default value
      * @return the split-up property value.
      */
     public String[] getStringList(String key, String delim,
@@ -424,9 +453,9 @@ public class TypedProperties extends Properties {
      * 
      * @return true if property is defined and equals match
      * @param key
-     *            property name
+     *                property name
      * @param match
-     *            value to be matched
+     *                value to be matched
      */
     public boolean stringPropertyMatch(String key, String match) {
         String value = getProperty(key);
@@ -437,9 +466,9 @@ public class TypedProperties extends Properties {
      * Returns true if the given element is a member of the given list.
      * 
      * @param list
-     *            the given list.
+     *                the given list.
      * @param element
-     *            the given element.
+     *                the given element.
      * @return true if the given element is a member of the given list.
      */
     private static boolean contains(String[] list, String element) {
@@ -458,9 +487,9 @@ public class TypedProperties extends Properties {
      * Returns true if the given string starts with one of the given prefixes.
      * 
      * @param string
-     *            the given string.
+     *                the given string.
      * @param prefixes
-     *            the given prefixes.
+     *                the given prefixes.
      * @return true if the given string starts with one of the given prefixes.
      */
     private static boolean startsWith(String string, String[] prefixes) {
@@ -480,15 +509,15 @@ public class TypedProperties extends Properties {
      * 
      * @return a Property object containing all unrecognized properties.
      * @param prefix
-     *            the prefix that should be checked
+     *                the prefix that should be checked
      * @param validKeys
-     *            the set of valid keys (all with the prefix).
+     *                the set of valid keys (all with the prefix).
      * @param validSubPrefixes
-     *            if a propery starts with one of these prefixes, it is declared
-     *            valid
+     *                if a propery starts with one of these prefixes, it is
+     *                declared valid
      * @param printWarning
-     *            if true, a warning is printed to standard error for each
-     *            unknown property
+     *                if true, a warning is printed to standard error for each
+     *                unknown property
      */
     public TypedProperties checkProperties(String prefix, String[] validKeys,
             String[] validSubPrefixes, boolean printWarning) {
@@ -523,12 +552,12 @@ public class TypedProperties extends Properties {
      * 
      * @return a Property object containing all matching properties.
      * @param prefix
-     *            the desired prefix
+     *                the desired prefix
      * @param removePrefix
-     *            should the prefix be removed from the property name?
+     *                should the prefix be removed from the property name?
      * @param removeProperties
-     *            should the returned properties be removed from the current
-     *            properties?
+     *                should the returned properties be removed from the current
+     *                properties?
      */
     public TypedProperties filter(String prefix, boolean removePrefix,
             boolean removeProperties) {
@@ -566,7 +595,7 @@ public class TypedProperties extends Properties {
      * 
      * @return a Property object containing all matching properties.
      * @param prefix
-     *            the desired prefix
+     *                the desired prefix
      */
     public TypedProperties filter(String prefix) {
         return filter(prefix, false, false);
@@ -576,10 +605,10 @@ public class TypedProperties extends Properties {
      * Prints properties (including default properties) to a stream.
      * 
      * @param out
-     *            The stream to write output to.
+     *                The stream to write output to.
      * @param prefix
-     *            Only print properties which start with the given prefix. If
-     *            null, will print all properties
+     *                Only print properties which start with the given prefix.
+     *                If null, will print all properties
      */
     public void printProperties(PrintStream out, String prefix) {
         if (prefix == null) {
