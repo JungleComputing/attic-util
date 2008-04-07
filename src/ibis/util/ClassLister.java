@@ -50,7 +50,7 @@ public class ClassLister {
         for (int i = 0; i < jarFiles.length; i++) {
             try {
                 File f = new File(jarFiles[i].getName());
-                urls[i] = f.toURL();
+                urls[i] = f.toURI().toURL();
             } catch (Exception e) {
                 throw new Error(e);
             }
