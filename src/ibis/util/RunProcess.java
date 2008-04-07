@@ -5,6 +5,8 @@ package ibis.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Utility to run a process and read its output in a separate thread.
@@ -12,14 +14,16 @@ import java.io.InputStream;
  * To run a command, the sequence is:
  * <br>
  * <pre>
- *     RunProcess p = new RunProcess("command ...");
+ *     RunProcess p = new RunProcess("command", "arg1", ...);
+ *     p.run();
  *     byte[] o = p.getStdout();
  *     byte[] e = p.getStderr();
  *     int status = p.getExitStatus();
  * </pre> 
  */
 public final class RunProcess {
-    private static final Runtime r = Runtime.getRuntime();
+    
+    private final ProcessBuilder builder;
 
     static class buf {
         public InputStream s;
@@ -42,7 +46,7 @@ public final class RunProcess {
     }
 
     /** Indicates the exit status of the process. */
-    private int exitstatus;
+    private int exitStatus = -1;
 
     /** The <code>Process</code> object for the command. */
     private Process p = null;
@@ -96,70 +100,32 @@ public final class RunProcess {
         }
     }
 
-    private RunProcess() {
-        exitstatus = -1;
-    }
-
     /**
-     * Runs the command as specified.
-     * Blocks until the command is finished.
-     * @param command the specified command.
-     */
-    public RunProcess(String command) {
-        this();
-        try {
-            p = r.exec(command);
-        } catch (Exception e) {
-            // Should not happen. At least there is a non-zero exit status.
-            proc_err = new buf(("Could not execute command: " + command)
-                    .getBytes());
-            return;
-        }
-
-        dealWithResult();
-    }
-
-    /**
-     * Runs the command as specified.
-     * Blocks until the command is finished.
+     * Creates a RunProcess object for the specified command.
      * @param command the specified command and arguments.
-     * @param env the environment.
      */
-    public RunProcess(String[] command, String env[]) {
-        this();
-        try {
-            p = r.exec(command, env);
-        } catch (Exception e) {
-            // Should not happen. At least there is a non-zero exit status.
-            String cmd = "";
-            for (int i = 0; i < command.length; i++) {
-                cmd = cmd + command[i] + " ";
-            }
-            proc_err = new buf(("Could not execute cmd: " + cmd).getBytes());
-            return;
-        }
-
-        dealWithResult();
+    public RunProcess(String... command) {
+        builder = new ProcessBuilder(command);
     }
 
     /**
-     * Runs the command as specified.
-     * Blocks until the command is finished.
+     * Creates a RunProcess object for the specified command.
      * @param command the specified command and arguments.
-     * @param env the environment.
-     * @param dir dir - the working directory of the command, or <code>null</code> for the working directory of this process.
      */
-    public RunProcess(String[] command, String env[],File dir) {
-        this();
+    public RunProcess(List<String> command) {
+        builder = new ProcessBuilder(command);
+    }
+    
+    /**
+     * Runs the built command.
+     * This method blocks until the command is finished, after
+     * which exit status, output and error output can be obtained.
+     */
+    public void run() {
         try {
-            p = r.exec(command, env,dir);
+            p = builder.start();
         } catch (Exception e) {
-            // Should not happen. At least there is a non-zero exit status.
-            String cmd = "";
-            for (int i = 0; i < command.length; i++) {
-                cmd = cmd + command[i] + " ";
-            }
-            proc_err = new buf(("Could not execute cmd: " + cmd).getBytes());
+            proc_err = new buf(("Could not execute cmd: " + builder.toString()).getBytes());
             return;
         }
 
@@ -183,7 +149,7 @@ public final class RunProcess {
         do {
             try {
                 interrupted = false;
-                exitstatus = p.waitFor();
+                exitStatus = p.waitFor();
             } catch (InterruptedException e) {
                 interrupted = true;
             }
@@ -237,6 +203,72 @@ public final class RunProcess {
      * @return the exit status.
      */
     public int getExitStatus() {
-        return exitstatus;
+        return exitStatus;
+    }
+    
+    /**
+     * @see ProcessBuilder#command().
+     */
+    public List<String> command() {
+        return builder.command();
+    }
+    
+    /**
+     * @see ProcessBuilder#command(List).
+     */
+    public RunProcess command(List<String> command) {
+        builder.command(command);
+        return this;
+    }
+    
+    /**
+     * @see ProcessBuilder#command(String...).
+     */
+    public RunProcess command(String... command) {
+        builder.command(command);
+        return this;
+    }
+    
+    /**
+     * @see ProcessBuilder#directory().
+     */
+    public File directory() {
+        return builder.directory();
+    }
+    
+    /**
+     * @see ProcessBuilder#directory(File).
+     */
+    public ProcessBuilder directory(File directory) {
+        return builder.directory(directory);
+    }
+
+    /**
+     * @see ProcessBuilder#environment().
+     */
+    public Map<String, String> environment() {
+        return builder.environment();
+    }
+    
+    /**
+     * @see ProcessBuilder#redirectErrorStream().
+     */
+    public boolean redirectErrorStream() {
+        return builder.redirectErrorStream();
+    }
+
+    /**
+     * @see ProcessBuilder#redirectErrorStream(boolean).
+     */
+    public RunProcess redirectErrorStream(boolean redirectErrorStream) {
+        builder.redirectErrorStream(redirectErrorStream);
+        return this;
+    }
+    
+    /**
+     * @see ProcessBuilder#start().
+     */
+    public Process start() throws IOException {
+        return builder.start();
     }
 }
