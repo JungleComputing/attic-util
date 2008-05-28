@@ -193,6 +193,9 @@ public final class RunProcess {
      * @return the error output buffer.
      */
     public byte[] getStderr() {
+        if (proc_err == null) {
+            return new byte[0];
+        }
         byte b[] = new byte[proc_err.sz];
         System.arraycopy(proc_err.buffer, 0, b, 0, proc_err.sz);
         return b;
