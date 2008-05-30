@@ -67,7 +67,7 @@ public class Postpone {
         }
 
         // Now, load the class.
-        Class cl = null;
+        Class<?> cl = null;
         try {
             cl = Class.forName(args[argsbase]);
         } catch (ClassNotFoundException e) {
